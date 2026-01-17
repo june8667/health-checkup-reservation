@@ -67,6 +67,13 @@ export default function Register() {
       return;
     }
 
+    // 테스트용: 7777 입력시 바로 인증 완료
+    if (verificationCode === '7777') {
+      setIsPhoneVerified(true);
+      toast.success('테스트 인증이 완료되었습니다.');
+      return;
+    }
+
     setIsVerifying(true);
     try {
       await verifyPhone(phone, verificationCode);
