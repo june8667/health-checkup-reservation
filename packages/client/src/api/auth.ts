@@ -1,7 +1,7 @@
 import apiClient from './client';
 import type { User, UserCreateInput, UserLoginInput, ApiResponse } from '@health-checkup/shared';
 
-export async function register(data: UserCreateInput): Promise<ApiResponse<{ _id: string; email: string; name: string }>> {
+export async function register(data: UserCreateInput & { role?: string }): Promise<ApiResponse<{ _id: string; email: string; name: string }>> {
   const response = await apiClient.post('/auth/register', data);
   return response.data;
 }

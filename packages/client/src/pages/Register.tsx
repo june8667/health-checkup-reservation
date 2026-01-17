@@ -31,6 +31,7 @@ export default function Register() {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // 테스트용 관리자 권한
 
   const {
     register,
@@ -61,8 +62,8 @@ export default function Register() {
   };
 
   const handleVerifyCode = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      toast.error('6자리 인증번호를 입력해주세요.');
+    if (!verificationCode || (verificationCode.length !== 6 && verificationCode !== '7777')) {
+      toast.error('인증번호를 입력해주세요. (테스트: 7777)');
       return;
     }
 
@@ -87,7 +88,10 @@ export default function Register() {
     setIsLoading(true);
     try {
       const { passwordConfirm, ...registerData } = data;
-      await registerApi(registerData);
+      await registerApi({
+        ...registerData,
+        role: isAdmin ? 'admin' : 'user', // 테스트용 관리자 권한
+      });
       toast.success('회원가입이 완료되었습니다. 로그인해주세요.');
       navigate('/login');
     } catch (error: any) {
@@ -231,6 +235,19 @@ export default function Register() {
                   {...register('marketingConsent')}
                 />
                 <span className="text-sm text-gray-600">마케팅 정보 수신에 동의합니다. (선택)</span>
+              </label>
+            </div>
+
+            {/* 테스트용 관리자 권한 */}
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={isAdmin}
+                  onChange={(e) => setIsAdmin(e.target.checked)}
+                />
+                <span className="text-sm text-yellow-800 font-medium">관리자 권한으로 가입 (테스트용)</span>
               </label>
             </div>
 

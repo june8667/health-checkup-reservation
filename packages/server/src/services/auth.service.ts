@@ -14,6 +14,7 @@ interface RegisterInput {
   birthDate: Date;
   gender: 'male' | 'female';
   marketingConsent?: boolean;
+  role?: 'user' | 'admin'; // 테스트용
 }
 
 interface LoginResult {
@@ -121,6 +122,11 @@ export class AuthService {
   }
 
   async verifyPhone(phone: string, code: string): Promise<boolean> {
+    // 테스트용: 7777 입력시 인증 통과
+    if (code === '7777') {
+      return true;
+    }
+
     const redis = getRedisClient();
     const storedCode = await redis.get(`phone_verification:${phone}`);
 
