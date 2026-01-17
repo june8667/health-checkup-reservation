@@ -12,10 +12,30 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: env.clientUrl,
+
+// CORS 설정
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // 개발 환경이거나 origin이 없는 경우 (같은 도메인) 허용
+    if (!origin || env.isDev) {
+      callback(null, true);
+      return;
+    }
+    // 클라이언트 URL 허용
+    if (origin === env.clientUrl || origin.includes('cloudtype.app')) {
+      callback(null, true);
+      return;
+    }
+    callback(null, true); // 테스트용: 모든 origin 허용
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+
+// Preflight 요청 처리
+app.options('*', cors(corsOptions));
 app.use(morgan(env.isDev ? 'dev' : 'combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
