@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData } from '../api/auth';
+import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData, seedSampleData } from '../api/auth';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 
@@ -256,24 +256,42 @@ export default function Register() {
                 />
                 <span className="text-sm text-yellow-800 font-medium">관리자 권한으로 가입 (테스트용)</span>
               </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                onClick={async () => {
-                  if (window.confirm('모든 회원, 예약, 결제 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-blue-600 border-blue-300 hover:bg-blue-50"
+                  onClick={async () => {
                     try {
-                      await resetAllData();
-                      toast.success('모든 데이터가 삭제되었습니다.');
+                      await seedSampleData();
+                      toast.success('샘플 데이터(병원, 패키지)가 생성되었습니다.');
                     } catch (error) {
-                      toast.error('데이터 삭제에 실패했습니다.');
+                      toast.error('샘플 데이터 생성에 실패했습니다.');
                     }
-                  }
-                }}
-              >
-                모든 데이터 삭제 (테스트용)
-              </Button>
+                  }}
+                >
+                  샘플 데이터 생성
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={async () => {
+                    if (window.confirm('모든 회원, 예약, 결제 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+                      try {
+                        await resetAllData();
+                        toast.success('모든 데이터가 삭제되었습니다.');
+                      } catch (error) {
+                        toast.error('데이터 삭제에 실패했습니다.');
+                      }
+                    }
+                  }}
+                >
+                  데이터 삭제
+                </Button>
+              </div>
             </div>
 
             <Button

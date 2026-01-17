@@ -41,3 +41,9 @@ export async function resetAllData(): Promise<ApiResponse> {
   const response = await apiClient.delete('/test/reset');
   return response.data;
 }
+
+// 테스트용: 샘플 데이터 생성
+export async function seedSampleData(): Promise<ApiResponse> {
+  const response = await apiClient.post('/test/seed');
+  return response.data;
+}
