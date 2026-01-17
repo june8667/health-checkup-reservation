@@ -23,6 +23,16 @@ RUN npm run build -w @health-checkup/client
 # 프로덕션 이미지
 FROM nginx:alpine
 
+# nginx 권한 문제 해결
+RUN mkdir -p /var/cache/nginx/client_temp \
+    /var/cache/nginx/proxy_temp \
+    /var/cache/nginx/fastcgi_temp \
+    /var/cache/nginx/uwsgi_temp \
+    /var/cache/nginx/scgi_temp \
+    && chmod -R 777 /var/cache/nginx \
+    && chmod -R 777 /var/run \
+    && chmod -R 777 /var/log/nginx
+
 COPY --from=builder /app/packages/client/dist /usr/share/nginx/html
 COPY packages/client/nginx.conf /etc/nginx/conf.d/default.conf
 
