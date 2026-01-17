@@ -21,13 +21,6 @@ const CATEGORY_OPTIONS = [
   { value: 'specialized', label: '특화검진' },
 ];
 
-const CATEGORY_LABELS: Record<string, string> = {
-  basic: '기본검진',
-  standard: '표준검진',
-  premium: '프리미엄',
-  specialized: '특화검진',
-};
-
 const GENDER_OPTIONS = [
   { value: 'all', label: '전체' },
   { value: 'male', label: '남성' },

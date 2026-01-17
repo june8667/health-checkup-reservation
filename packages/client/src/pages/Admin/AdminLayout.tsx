@@ -16,7 +16,7 @@ const navItems = [
   { path: '/admin/payments', label: '결제 관리', icon: CreditCard },
   { path: '/admin/users', label: '회원 관리', icon: Users },
   { path: '/admin/packages', label: '패키지 관리', icon: Package },
-  { path: '/admin/timeslots', label: '시간 차단', icon: Clock },
+  { path: '/admin/schedule', label: '스케줄 관리', icon: Clock },
 ];
 
 export default function AdminLayout() {

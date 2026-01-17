@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'react-toastify';
-import { Search, Filter, X } from 'lucide-react';
-import { getAdminReservations, updateReservationStatus } from '../../api/admin';
+import { Search, Filter, X, Calendar, User, Phone, Mail, Package, CreditCard } from 'lucide-react';
+import { getAdminReservations, updateReservationStatus, deleteReservation } from '../../api/admin';
 import Button from '../../components/common/Button';
 
 const STATUS_OPTIONS = [
@@ -21,6 +22,7 @@ function formatPrice(price: number) {
 }
 
 export default function Reservations() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -40,6 +42,7 @@ export default function Reservations() {
     onSuccess: () => {
       toast.success('예약 상태가 업데이트되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['adminReservations'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleReservations'] });
       setSelectedReservation(null);
       setNewStatus('');
       setMemo('');
@@ -48,6 +51,48 @@ export default function Reservations() {
       toast.error('상태 업데이트에 실패했습니다.');
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteReservation,
+    onSuccess: () => {
+      toast.success('예약이 삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['adminReservations'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduleReservations'] });
+      setSelectedReservation(null);
+    },
+    onError: () => {
+      toast.error('예약 삭제에 실패했습니다.');
+    },
+  });
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return { text: 'text-yellow-800', label: '결제대기' };
+      case 'confirmed':
+        return { text: 'text-green-800', label: '예약확정' };
+      case 'completed':
+        return { text: 'text-blue-800', label: '검진완료' };
+      case 'cancelled':
+        return { text: 'text-red-800', label: '취소' };
+      case 'no_show':
+        return { text: 'text-orange-800', label: '노쇼' };
+      default:
+        return { text: 'text-gray-800', label: status };
+    }
+  };
+
+  const openReservationModal = (reservation: any) => {
+    setSelectedReservation(reservation);
+    setNewStatus(reservation.status);
+    setMemo(reservation.adminMemo || '');
+  };
+
+  const closeReservationModal = () => {
+    setSelectedReservation(null);
+    setNewStatus('');
+    setMemo('');
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +110,12 @@ export default function Reservations() {
 
   const reservations = data?.data?.items || [];
   const totalPages = data?.data?.totalPages || 1;
+
+  const goToSchedule = (reservation: any) => {
+    const date = format(new Date(reservation.reservationDate), 'yyyy-MM-dd');
+    const time = reservation.reservationTime;
+    navigate(`/admin/schedule?date=${date}&time=${time}`);
+  };
 
   return (
     <div>
@@ -152,7 +203,11 @@ export default function Reservations() {
                 </tr>
               ) : (
                 reservations.map((reservation: any) => (
-                  <tr key={reservation._id} className="hover:bg-gray-50">
+                  <tr
+                    key={reservation._id}
+                    onClick={() => openReservationModal(reservation)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {reservation.reservationNumber}
                     </td>
@@ -175,14 +230,14 @@ export default function Reservations() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
-                        onClick={() => {
-                          setSelectedReservation(reservation);
-                          setNewStatus(reservation.status);
-                          setMemo(reservation.adminMemo || '');
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToSchedule(reservation);
                         }}
-                        className="text-primary-600 hover:text-primary-800"
+                        className="text-green-600 hover:text-green-800 flex items-center gap-1"
                       >
-                        상태변경
+                        <Calendar className="w-4 h-4" />
+                        스케줄
                       </button>
                     </td>
                   </tr>
@@ -222,14 +277,14 @@ export default function Reservations() {
         )}
       </div>
 
-      {/* Status Update Modal */}
+      {/* 예약 상세 모달 */}
       {selectedReservation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">예약 상태 변경</h3>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
+              <h3 className="text-lg font-semibold">예약 상세 정보</h3>
               <button
-                onClick={() => setSelectedReservation(null)}
+                onClick={closeReservationModal}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
@@ -237,17 +292,99 @@ export default function Reservations() {
             </div>
 
             <div className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  예약번호
-                </label>
-                <p className="text-gray-900">{selectedReservation.reservationNumber}</p>
+              {/* 예약 정보 */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  예약 정보
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500">예약번호</span>
+                    <p className="font-medium">{selectedReservation.reservationNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">예약일시</span>
+                    <p className="font-medium">
+                      {format(new Date(selectedReservation.reservationDate), 'yyyy-MM-dd')} {selectedReservation.reservationTime}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">현재 상태</span>
+                    <p className={`font-medium ${getStatusStyle(selectedReservation.status).text}`}>
+                      {getStatusStyle(selectedReservation.status).label}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">예약일</span>
+                    <p className="font-medium">
+                      {format(new Date(selectedReservation.createdAt), 'yyyy-MM-dd HH:mm')}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  상태 변경
-                </label>
+              {/* 고객 정보 */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  고객 정보
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">이름</span>
+                    <span className="font-medium">{selectedReservation.patientInfo?.name || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">연락처</span>
+                    <span className="font-medium">{selectedReservation.patientInfo?.phone || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">이메일</span>
+                    <span className="font-medium">{selectedReservation.userId?.email || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">생년월일</span>
+                    <span className="font-medium">{selectedReservation.patientInfo?.birthDate || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">성별</span>
+                    <span className="font-medium">
+                      {selectedReservation.patientInfo?.gender === 'male' ? '남성' :
+                       selectedReservation.patientInfo?.gender === 'female' ? '여성' : '-'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 패키지 및 결제 정보 */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  패키지 및 결제
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">패키지</span>
+                    <span className="font-medium">{selectedReservation.packageId?.name || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-500 w-16">결제금액</span>
+                    <span className="font-medium">{formatPrice(selectedReservation.finalAmount || 0)}원</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 상태 변경 */}
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">상태 변경</h4>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
@@ -261,33 +398,47 @@ export default function Reservations() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  관리자 메모
-                </label>
+              {/* 관리자 메모 */}
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">관리자 메모</h4>
                 <textarea
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
                   rows={3}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="관리자 메모를 입력하세요"
+                  placeholder="메모를 입력하세요"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 p-4 border-t">
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedReservation(null)}
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleUpdateStatus}
-                isLoading={updateMutation.isPending}
-              >
-                저장
-              </Button>
+            <div className="flex justify-between gap-2 p-4 border-t sticky bottom-0 bg-white">
+              {selectedReservation.status === 'cancelled' && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    if (window.confirm('취소된 예약을 삭제하시겠습니까?')) {
+                      deleteMutation.mutate(selectedReservation._id);
+                    }
+                  }}
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  예약 삭제
+                </Button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  variant="secondary"
+                  onClick={closeReservationModal}
+                >
+                  닫기
+                </Button>
+                <Button
+                  onClick={handleUpdateStatus}
+                  isLoading={updateMutation.isPending}
+                >
+                  저장
+                </Button>
+              </div>
             </div>
           </div>
         </div>

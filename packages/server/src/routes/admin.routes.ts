@@ -4,6 +4,8 @@ import {
   getDashboardStats,
   getAllReservations,
   updateReservationStatus,
+  rescheduleReservation,
+  deleteReservation,
   getAllPayments,
   getAllUsers,
   getAllPackages,
@@ -29,6 +31,8 @@ router.get('/dashboard', getDashboardStats);
 // Reservations management
 router.get('/reservations', getAllReservations);
 router.patch('/reservations/:id/status', updateReservationStatus);
+router.patch('/reservations/:id/reschedule', rescheduleReservation);
+router.delete('/reservations/:id', deleteReservation);
 
 // Payments management
 router.get('/payments', getAllPayments);

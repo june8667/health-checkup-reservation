@@ -54,6 +54,23 @@ export async function updateReservationStatus(
   return data;
 }
 
+export async function rescheduleReservation(data: {
+  id: string;
+  date: string;
+  time: string;
+}) {
+  const response = await apiClient.patch(`/admin/reservations/${data.id}/reschedule`, {
+    date: data.date,
+    time: data.time,
+  });
+  return response.data;
+}
+
+export async function deleteReservation(id: string) {
+  const response = await apiClient.delete(`/admin/reservations/${id}`);
+  return response.data;
+}
+
 export async function getAdminPayments(params: {
   page?: number;
   limit?: number;
@@ -167,5 +184,19 @@ export async function clearBlockedSlotsByDate(data: {
   packageId?: string;
 }) {
   const response = await apiClient.post('/admin/blocked-slots/clear', data);
+  return response.data;
+}
+
+// 스케줄용 예약 조회 (날짜 범위)
+export async function getScheduleReservations(params: {
+  startDate: string;
+  endDate: string;
+}) {
+  const response = await apiClient.get('/admin/reservations', {
+    params: {
+      ...params,
+      limit: 1000,
+    },
+  });
   return response.data;
 }

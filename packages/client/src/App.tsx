@@ -25,7 +25,7 @@ import AdminReservations from './pages/Admin/Reservations';
 import AdminPayments from './pages/Admin/Payments';
 import AdminUsers from './pages/Admin/Users';
 import AdminPackages from './pages/Admin/Packages';
-import AdminTimeSlots from './pages/Admin/TimeSlots';
+import AdminSchedule from './pages/Admin/Schedule';
 
 function App() {
   return (
@@ -71,7 +71,7 @@ function App() {
         <Route path="payments" element={<AdminPayments />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="packages" element={<AdminPackages />} />
-        <Route path="timeslots" element={<AdminTimeSlots />} />
+        <Route path="schedule" element={<AdminSchedule />} />
       </Route>
     </Routes>
   );

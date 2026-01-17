@@ -151,10 +151,10 @@ export class AdminService {
     if (filters.startDate || filters.endDate) {
       query.reservationDate = {};
       if (filters.startDate) {
-        query.reservationDate.$gte = filters.startDate;
+        query.reservationDate.$gte = startOfDay(filters.startDate);
       }
       if (filters.endDate) {
-        query.reservationDate.$lte = filters.endDate;
+        query.reservationDate.$lte = endOfDay(filters.endDate);
       }
     }
 
@@ -196,6 +196,27 @@ export class AdminService {
     ).populate('userId packageId paymentId');
 
     return reservation;
+  }
+
+  async rescheduleReservation(
+    reservationId: string,
+    date: Date,
+    time: string
+  ): Promise<any> {
+    const reservation = await Reservation.findByIdAndUpdate(
+      reservationId,
+      {
+        reservationDate: startOfDay(date),
+        reservationTime: time,
+      },
+      { new: true }
+    ).populate('userId packageId paymentId');
+
+    return reservation;
+  }
+
+  async deleteReservation(reservationId: string): Promise<void> {
+    await Reservation.findByIdAndDelete(reservationId);
   }
 
   async getAllPayments(

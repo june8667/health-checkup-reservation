@@ -76,6 +76,65 @@ export async function updateReservationStatus(
   }
 }
 
+export async function rescheduleReservation(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { date, time } = req.body;
+
+    if (!date || !time) {
+      res.status(400).json({
+        success: false,
+        message: '날짜와 시간을 입력해주세요.',
+      });
+      return;
+    }
+
+    const reservation = await adminService.rescheduleReservation(
+      id,
+      new Date(date),
+      time
+    );
+
+    if (!reservation) {
+      res.status(404).json({
+        success: false,
+        message: '예약을 찾을 수 없습니다.',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: '예약 일정이 변경되었습니다.',
+      data: reservation,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteReservation(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    await adminService.deleteReservation(id);
+
+    res.json({
+      success: true,
+      message: '예약이 삭제되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getAllPayments(
   req: AuthRequest,
   res: Response,
