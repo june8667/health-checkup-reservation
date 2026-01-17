@@ -109,15 +109,17 @@ export default function SelectDate() {
                     selectedTime === slot.time
                       ? 'bg-primary-600 text-white'
                       : slot.available
-                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                      : 'bg-red-50 text-red-400 border border-red-200 cursor-not-allowed'
                   }`}
                 >
                   {slot.time}
-                  {slot.available && (
+                  {slot.available ? (
                     <span className="block text-xs opacity-75">
                       {slot.remainingSlots}자리
                     </span>
+                  ) : (
+                    <span className="block text-xs">마감</span>
                   )}
                 </button>
               ))}

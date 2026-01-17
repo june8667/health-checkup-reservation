@@ -288,17 +288,27 @@ export default function TimeSlots() {
                       const selected = isSelected(day, time);
                       const sunday = isSunday(day);
 
+                      // 지난 시간인지 확인
+                      const [hours, minutes] = time.split(':').map(Number);
+                      const slotDateTime = new Date(day);
+                      slotDateTime.setHours(hours, minutes, 0, 0);
+                      const isPast = slotDateTime < new Date();
+
                       return (
                         <td
                           key={`${day.toISOString()}-${time}`}
                           className="px-2 py-2 text-center"
                         >
                           {sunday ? (
-                            <div className="text-xs text-gray-400">휴무</div>
+                            <div className="py-2 text-xs text-gray-400 bg-gray-50 rounded">휴무</div>
+                          ) : isPast ? (
+                            <div className="py-2 text-xs text-red-400 bg-red-50 rounded border border-red-100">
+                              지난시간
+                            </div>
                           ) : blocked ? (
                             <button
                               onClick={() => handleUnblockSlot(blockedSlot)}
-                              className="w-full py-2 px-2 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-colors"
+                              className="w-full py-2 px-2 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-colors border border-red-200"
                               title={blockedSlot?.reason || '클릭하여 차단 해제'}
                             >
                               <Lock className="w-3 h-3 inline mr-1" />
@@ -309,11 +319,11 @@ export default function TimeSlots() {
                               onClick={() => toggleSlotSelection(day, time)}
                               className={`w-full py-2 px-2 rounded text-xs font-medium transition-colors ${
                                 selected
-                                  ? 'bg-primary-100 text-primary-700 ring-2 ring-primary-500'
-                                  : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                  ? 'bg-blue-200 text-blue-800 ring-2 ring-blue-500 border border-blue-300'
+                                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
                               }`}
                             >
-                              {selected ? '선택됨' : '예약가능'}
+                              {selected ? '선택됨' : '차단가능'}
                             </button>
                           )}
                         </td>
