@@ -2,9 +2,8 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# 빌드 시 환경변수 받기
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+# API URL 하드코딩 (Cloudtype 배포용)
+ENV VITE_API_URL=https://port-0-health-checkup-reservation-server-m56ijle8e6de9b5d.sel4.cloudtype.app/api
 
 # 루트 package.json 복사
 COPY package*.json ./
