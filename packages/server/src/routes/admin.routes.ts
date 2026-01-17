@@ -11,6 +11,10 @@ import {
   createPackage,
   updatePackage,
   deletePackage,
+  getBlockedSlots,
+  createBlockedSlot,
+  deleteBlockedSlot,
+  deleteBlockedSlotsByDate,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -38,5 +42,11 @@ router.get('/packages/:id', getPackageById);
 router.post('/packages', createPackage);
 router.put('/packages/:id', updatePackage);
 router.delete('/packages/:id', deletePackage);
+
+// Blocked slots management (시간 차단 관리)
+router.get('/blocked-slots', getBlockedSlots);
+router.post('/blocked-slots', createBlockedSlot);
+router.delete('/blocked-slots/:id', deleteBlockedSlot);
+router.post('/blocked-slots/clear', deleteBlockedSlotsByDate);
 
 export default router;

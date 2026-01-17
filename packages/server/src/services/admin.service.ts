@@ -2,6 +2,7 @@ import { User } from '../models/User';
 import { Reservation } from '../models/Reservation';
 import { Payment } from '../models/Payment';
 import { Package } from '../models/Package';
+import { BlockedSlot } from '../models/BlockedSlot';
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 
 export interface DashboardStats {
@@ -335,5 +336,73 @@ export class AdminService {
 
   async getPackageById(packageId: string): Promise<any> {
     return Package.findById(packageId).populate('hospitalId', 'name').lean();
+  }
+
+  // 차단된 시간 관리
+  async getBlockedSlots(
+    startDate: Date,
+    endDate: Date,
+    packageId?: string
+  ): Promise<any[]> {
+    const query: any = {
+      date: { $gte: startOfDay(startDate), $lte: endOfDay(endDate) },
+    };
+    if (packageId) {
+      query.packageId = packageId;
+    }
+
+    return BlockedSlot.find(query)
+      .populate('packageId', 'name')
+      .populate('createdBy', 'name')
+      .sort({ date: 1, time: 1 })
+      .lean();
+  }
+
+  async createBlockedSlot(
+    date: Date,
+    time: string,
+    createdBy: string,
+    packageId?: string,
+    reason?: string
+  ): Promise<any> {
+    const blockedSlot = await BlockedSlot.create({
+      date: startOfDay(date),
+      time,
+      packageId: packageId || null,
+      reason,
+      createdBy,
+    });
+    return blockedSlot;
+  }
+
+  async deleteBlockedSlot(blockedSlotId: string): Promise<void> {
+    await BlockedSlot.findByIdAndDelete(blockedSlotId);
+  }
+
+  async bulkCreateBlockedSlots(
+    date: Date,
+    times: string[],
+    createdBy: string,
+    packageId?: string,
+    reason?: string
+  ): Promise<any[]> {
+    const slots = times.map(time => ({
+      date: startOfDay(date),
+      time,
+      packageId: packageId || null,
+      reason,
+      createdBy,
+    }));
+    return BlockedSlot.insertMany(slots);
+  }
+
+  async deleteBlockedSlotsByDate(date: Date, packageId?: string): Promise<void> {
+    const query: any = {
+      date: { $gte: startOfDay(date), $lte: endOfDay(date) },
+    };
+    if (packageId) {
+      query.packageId = packageId;
+    }
+    await BlockedSlot.deleteMany(query);
   }
 }

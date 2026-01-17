@@ -11,7 +11,7 @@ export interface IPackage extends Document {
   price: number;
   discountPrice?: number;
   duration: number;
-  hospitalId: Types.ObjectId;
+  hospitalId?: Types.ObjectId;
   targetGender: 'male' | 'female' | 'all';
   targetAgeMin?: number;
   targetAgeMax?: number;
@@ -45,7 +45,6 @@ const packageSchema = new Schema<IPackage>(
     hospitalId: {
       type: Schema.Types.ObjectId,
       ref: 'Hospital',
-      required: true,
     },
     targetGender: {
       type: String,

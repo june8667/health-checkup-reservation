@@ -264,3 +264,140 @@ export async function deletePackage(
     next(error);
   }
 }
+
+// 차단된 시간 관리
+export async function getBlockedSlots(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { startDate, endDate, packageId } = req.query;
+
+    if (!startDate || !endDate) {
+      res.status(400).json({
+        success: false,
+        message: '시작일과 종료일을 입력해주세요.',
+      });
+      return;
+    }
+
+    const slots = await adminService.getBlockedSlots(
+      new Date(startDate as string),
+      new Date(endDate as string),
+      packageId as string
+    );
+
+    res.json({
+      success: true,
+      data: slots,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createBlockedSlot(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { date, time, times, packageId, reason } = req.body;
+
+    if (!date) {
+      res.status(400).json({
+        success: false,
+        message: '날짜를 입력해주세요.',
+      });
+      return;
+    }
+
+    // 여러 시간 한번에 차단
+    if (times && Array.isArray(times)) {
+      const slots = await adminService.bulkCreateBlockedSlots(
+        new Date(date),
+        times,
+        req.user!.userId,
+        packageId,
+        reason
+      );
+      res.status(201).json({
+        success: true,
+        message: '시간이 차단되었습니다.',
+        data: slots,
+      });
+      return;
+    }
+
+    // 단일 시간 차단
+    if (!time) {
+      res.status(400).json({
+        success: false,
+        message: '시간을 입력해주세요.',
+      });
+      return;
+    }
+
+    const slot = await adminService.createBlockedSlot(
+      new Date(date),
+      time,
+      req.user!.userId,
+      packageId,
+      reason
+    );
+
+    res.status(201).json({
+      success: true,
+      message: '시간이 차단되었습니다.',
+      data: slot,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteBlockedSlot(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    await adminService.deleteBlockedSlot(id);
+
+    res.json({
+      success: true,
+      message: '차단이 해제되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteBlockedSlotsByDate(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { date, packageId } = req.body;
+
+    if (!date) {
+      res.status(400).json({
+        success: false,
+        message: '날짜를 입력해주세요.',
+      });
+      return;
+    }
+
+    await adminService.deleteBlockedSlotsByDate(new Date(date), packageId);
+
+    res.json({
+      success: true,
+      message: '해당 날짜의 차단이 모두 해제되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}

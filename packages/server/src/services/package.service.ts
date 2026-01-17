@@ -1,6 +1,7 @@
 import { Package, IPackage } from '../models/Package';
 import { Hospital } from '../models/Hospital';
 import { Reservation } from '../models/Reservation';
+import { BlockedSlot } from '../models/BlockedSlot';
 import { AppError } from '../middleware/error.middleware';
 import { startOfDay, endOfDay, format } from 'date-fns';
 
@@ -82,52 +83,51 @@ export class PackageService {
     packageId: string,
     date: Date
   ): Promise<{ time: string; available: boolean; remainingSlots: number }[]> {
-    const pkg = await Package.findById(packageId).populate('hospitalId');
+    const pkg = await Package.findById(packageId);
     if (!pkg) {
       throw new AppError('패키지를 찾을 수 없습니다.', 404);
     }
 
-    const hospital = await Hospital.findById(pkg.hospitalId);
-    if (!hospital) {
-      throw new AppError('병원 정보를 찾을 수 없습니다.', 404);
-    }
+    // 기본 시간 슬롯 생성 (09:00 ~ 18:00, 30분 단위, 점심시간 12:00~13:00 제외)
+    const defaultTimeSlots = [
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+      '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+      '16:00', '16:30', '17:00', '17:30',
+    ];
 
-    // UTC 기준으로 요일 계산 (타임존 문제 방지)
+    // 일요일(0)은 휴무
     const dayOfWeek = date.getUTCDay();
-
-    console.log('[getAvailableSlots] date:', date, 'dayOfWeek:', dayOfWeek, 'availableDays:', pkg.availableDays);
-
-    // Check if the day is available for this package
-    if (!pkg.availableDays.includes(dayOfWeek)) {
-      return [];
+    if (dayOfWeek === 0) {
+      return defaultTimeSlots.map(time => ({
+        time,
+        available: false,
+        remainingSlots: 0,
+      }));
     }
 
-    // Check hospital business hours
-    const businessHour = hospital.businessHours.find(
-      (bh) => bh.dayOfWeek === dayOfWeek
-    );
-
-    console.log('[getAvailableSlots] businessHour:', businessHour, 'hospital.timeSlots:', hospital.timeSlots);
-
-    if (!businessHour || businessHour.isHoliday) {
-      console.log('[getAvailableSlots] No business hour or holiday');
-      return [];
-    }
-
-    if (!hospital.timeSlots || hospital.timeSlots.length === 0) {
-      console.log('[getAvailableSlots] No timeSlots defined');
-      return [];
-    }
-
-    // Get existing reservations for the date
-    const existingReservations = await Reservation.find({
-      packageId,
-      reservationDate: {
-        $gte: startOfDay(date),
-        $lte: endOfDay(date),
-      },
-      status: { $in: ['pending', 'confirmed'] },
-    });
+    // 해당 날짜의 기존 예약 조회
+    const [existingReservations, blockedSlots] = await Promise.all([
+      Reservation.find({
+        packageId,
+        reservationDate: {
+          $gte: startOfDay(date),
+          $lte: endOfDay(date),
+        },
+        status: { $in: ['pending', 'confirmed'] },
+      }),
+      // 차단된 시간 조회 (해당 패키지 또는 전체)
+      BlockedSlot.find({
+        date: {
+          $gte: startOfDay(date),
+          $lte: endOfDay(date),
+        },
+        $or: [
+          { packageId: packageId },
+          { packageId: null },
+          { packageId: { $exists: false } },
+        ],
+      }),
+    ]);
 
     const reservationCountByTime = existingReservations.reduce(
       (acc, res) => {
@@ -137,10 +137,24 @@ export class PackageService {
       {} as Record<string, number>
     );
 
-    // Generate available slots
-    return hospital.timeSlots.map((time) => {
+    // 차단된 시간 Set
+    const blockedTimes = new Set(blockedSlots.map(bs => bs.time));
+
+    const maxSlots = pkg.maxReservationsPerSlot || 10;
+
+    // 시간 슬롯 반환
+    return defaultTimeSlots.map((time) => {
+      // 차단된 시간인지 확인
+      if (blockedTimes.has(time)) {
+        return {
+          time,
+          available: false,
+          remainingSlots: 0,
+        };
+      }
+
       const reservedCount = reservationCountByTime[time] || 0;
-      const remainingSlots = pkg.maxReservationsPerSlot - reservedCount;
+      const remainingSlots = maxSlots - reservedCount;
 
       return {
         time,
