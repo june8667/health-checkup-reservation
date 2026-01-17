@@ -4,13 +4,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { register as registerApi, sendPhoneCode, verifyPhone } from '../api/auth';
+import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData } from '../api/auth';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 
 const registerSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다.'),
-  password: z.string().min(8, '비밀번호는 8자 이상이어야 합니다.'),
+  password: z.string().min(1, '비밀번호를 입력해주세요.'), // 테스트용: 최소 1자
   passwordConfirm: z.string(),
   name: z.string().min(2, '이름은 2자 이상이어야 합니다.'),
   phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호 형식이 아닙니다.'),
@@ -245,8 +245,8 @@ export default function Register() {
               </label>
             </div>
 
-            {/* 테스트용 관리자 권한 */}
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            {/* 테스트용 옵션 */}
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -256,6 +256,24 @@ export default function Register() {
                 />
                 <span className="text-sm text-yellow-800 font-medium">관리자 권한으로 가입 (테스트용)</span>
               </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                onClick={async () => {
+                  if (window.confirm('모든 회원, 예약, 결제 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+                    try {
+                      await resetAllData();
+                      toast.success('모든 데이터가 삭제되었습니다.');
+                    } catch (error) {
+                      toast.error('데이터 삭제에 실패했습니다.');
+                    }
+                  }
+                }}
+              >
+                모든 데이터 삭제 (테스트용)
+              </Button>
             </div>
 
             <Button
