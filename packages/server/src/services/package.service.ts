@@ -92,7 +92,10 @@ export class PackageService {
       throw new AppError('병원 정보를 찾을 수 없습니다.', 404);
     }
 
-    const dayOfWeek = date.getDay();
+    // UTC 기준으로 요일 계산 (타임존 문제 방지)
+    const dayOfWeek = date.getUTCDay();
+
+    console.log('[getAvailableSlots] date:', date, 'dayOfWeek:', dayOfWeek, 'availableDays:', pkg.availableDays);
 
     // Check if the day is available for this package
     if (!pkg.availableDays.includes(dayOfWeek)) {
@@ -103,7 +106,16 @@ export class PackageService {
     const businessHour = hospital.businessHours.find(
       (bh) => bh.dayOfWeek === dayOfWeek
     );
+
+    console.log('[getAvailableSlots] businessHour:', businessHour, 'hospital.timeSlots:', hospital.timeSlots);
+
     if (!businessHour || businessHour.isHoliday) {
+      console.log('[getAvailableSlots] No business hour or holiday');
+      return [];
+    }
+
+    if (!hospital.timeSlots || hospital.timeSlots.length === 0) {
+      console.log('[getAvailableSlots] No timeSlots defined');
       return [];
     }
 
