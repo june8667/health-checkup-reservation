@@ -190,7 +190,7 @@ export class AdminService {
       {
         status,
         ...(memo && { adminMemo: memo }),
-      },
+      } as any,
       { new: true }
     ).populate('userId packageId paymentId');
 

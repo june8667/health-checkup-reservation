@@ -3,7 +3,12 @@ import { env } from './env';
 
 export async function connectDatabase(): Promise<void> {
   try {
-    await mongoose.connect(env.mongodbUri);
+    await mongoose.connect(env.mongodbUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    });
     console.log('✅ MongoDB connected successfully');
 
     mongoose.connection.on('error', (error) => {
