@@ -41,10 +41,19 @@ export function errorMiddleware(
   }
 
   // Mongoose duplicate key error
-  if (err.name === 'MongoServerError' && (err as any).code === 11000) {
+  if ((err.name === 'MongoServerError' || err.name === 'MongoError') && (err as any).code === 11000) {
+    const keyValue = (err as any).keyValue;
+    let message = '이미 존재하는 데이터입니다.';
+
+    if (keyValue?.email) {
+      message = '이미 가입된 이메일입니다.';
+    } else if (keyValue?.phone) {
+      message = '이미 가입된 휴대폰 번호입니다.';
+    }
+
     res.status(409).json({
       success: false,
-      message: '이미 존재하는 데이터입니다.',
+      message,
     });
     return;
   }
