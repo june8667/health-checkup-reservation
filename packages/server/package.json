@@ -1,0 +1,43 @@
+{
+  "name": "@health-checkup/server",
+  "version": "1.0.0",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@health-checkup/shared": "*",
+    "express": "^4.18.2",
+    "mongoose": "^8.1.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.4.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-validator": "^7.0.1",
+    "ioredis": "^5.3.2",
+    "axios": "^1.6.7",
+    "node-cron": "^3.0.3",
+    "date-fns": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.16",
+    "@types/node-cron": "^3.0.11",
+    "@types/cookie-parser": "^1.4.6",
+    "cookie-parser": "^1.4.6",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.1.2"
+  }
+}

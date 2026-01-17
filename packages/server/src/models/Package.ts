@@ -1,0 +1,73 @@
+import { Schema, model, Document, Types } from 'mongoose';
+
+export interface IPackage extends Document {
+  name: string;
+  description: string;
+  category: 'basic' | 'standard' | 'premium' | 'specialized';
+  items: {
+    name: string;
+    description?: string;
+  }[];
+  price: number;
+  discountPrice?: number;
+  duration: number;
+  hospitalId: Types.ObjectId;
+  targetGender: 'male' | 'female' | 'all';
+  targetAgeMin?: number;
+  targetAgeMax?: number;
+  availableDays: number[];
+  maxReservationsPerSlot: number;
+  isActive: boolean;
+  displayOrder: number;
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const packageSchema = new Schema<IPackage>(
+  {
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ['basic', 'standard', 'premium', 'specialized'],
+      required: true,
+    },
+    items: [
+      {
+        name: { type: String, required: true },
+        description: String,
+      },
+    ],
+    price: { type: Number, required: true },
+    discountPrice: Number,
+    duration: { type: Number, required: true, default: 120 },
+    hospitalId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Hospital',
+      required: true,
+    },
+    targetGender: {
+      type: String,
+      enum: ['male', 'female', 'all'],
+      default: 'all',
+    },
+    targetAgeMin: Number,
+    targetAgeMax: Number,
+    availableDays: [{ type: Number, min: 0, max: 6 }],
+    maxReservationsPerSlot: { type: Number, default: 10 },
+    isActive: { type: Boolean, default: true },
+    displayOrder: { type: Number, default: 0 },
+    tags: [String],
+  },
+  {
+    timestamps: true,
+    collection: 'packages',
+  }
+);
+
+packageSchema.index({ category: 1, isActive: 1 });
+packageSchema.index({ hospitalId: 1 });
+packageSchema.index({ price: 1 });
+
+export const Package = model<IPackage>('Package', packageSchema);
