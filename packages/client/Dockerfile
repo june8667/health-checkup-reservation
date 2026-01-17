@@ -18,9 +18,6 @@ RUN npm install
 COPY packages/shared ./packages/shared
 COPY packages/client ./packages/client
 
-# API URL 설정 (.env 파일 생성)
-RUN echo "VITE_API_URL=https://port-0-health-checkup-reservation-server-m56ijle8e6de9b5d.sel4.cloudtype.app/api" > ./packages/client/.env
-
 # shared 빌드
 RUN npm run build -w @health-checkup/shared
 
