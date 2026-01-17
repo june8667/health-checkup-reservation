@@ -74,7 +74,7 @@ export class AuthService {
     const { password: _, ...userWithoutPassword } = userObj;
 
     return {
-      user: userWithoutPassword as Omit<IUser, 'password'>,
+      user: userWithoutPassword as unknown as Omit<IUser, 'password'>,
       accessToken,
       refreshToken,
     };
