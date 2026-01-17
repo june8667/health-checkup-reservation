@@ -278,4 +278,62 @@ export class AdminService {
 
     return { users, total };
   }
+
+  // 패키지 관리
+  async getAllPackages(
+    page: number = 1,
+    limit: number = 20,
+    filters: { search?: string; category?: string; isActive?: boolean } = {}
+  ): Promise<{ packages: any[]; total: number }> {
+    const query: any = {};
+
+    if (filters.category) {
+      query.category = filters.category;
+    }
+
+    if (filters.isActive !== undefined) {
+      query.isActive = filters.isActive;
+    }
+
+    if (filters.search) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: 'i' } },
+        { description: { $regex: filters.search, $options: 'i' } },
+      ];
+    }
+
+    const [packages, total] = await Promise.all([
+      Package.find(query)
+        .populate('hospitalId', 'name')
+        .sort({ displayOrder: 1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Package.countDocuments(query),
+    ]);
+
+    return { packages, total };
+  }
+
+  async createPackage(data: any): Promise<any> {
+    const pkg = await Package.create(data);
+    return pkg;
+  }
+
+  async updatePackage(packageId: string, data: any): Promise<any> {
+    const pkg = await Package.findByIdAndUpdate(
+      packageId,
+      data,
+      { new: true }
+    ).populate('hospitalId', 'name');
+    return pkg;
+  }
+
+  async deletePackage(packageId: string): Promise<void> {
+    await Package.findByIdAndDelete(packageId);
+  }
+
+  async getPackageById(packageId: string): Promise<any> {
+    return Package.findById(packageId).populate('hospitalId', 'name').lean();
+  }
 }

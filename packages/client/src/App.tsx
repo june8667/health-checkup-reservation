@@ -24,6 +24,7 @@ import AdminDashboard from './pages/Admin/Dashboard';
 import AdminReservations from './pages/Admin/Reservations';
 import AdminPayments from './pages/Admin/Payments';
 import AdminUsers from './pages/Admin/Users';
+import AdminPackages from './pages/Admin/Packages';
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
         <Route path="reservations" element={<AdminReservations />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="packages" element={<AdminPackages />} />
       </Route>
     </Routes>
   );

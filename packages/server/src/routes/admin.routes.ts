@@ -6,6 +6,11 @@ import {
   updateReservationStatus,
   getAllPayments,
   getAllUsers,
+  getAllPackages,
+  getPackageById,
+  createPackage,
+  updatePackage,
+  deletePackage,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -26,5 +31,12 @@ router.get('/payments', getAllPayments);
 
 // Users management
 router.get('/users', getAllUsers);
+
+// Packages management
+router.get('/packages', getAllPackages);
+router.get('/packages/:id', getPackageById);
+router.post('/packages', createPackage);
+router.put('/packages/:id', updatePackage);
+router.delete('/packages/:id', deletePackage);
 
 export default router;

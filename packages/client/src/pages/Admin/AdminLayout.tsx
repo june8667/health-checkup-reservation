@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CreditCard,
   Users,
+  Package,
   ArrowLeft,
 } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const navItems = [
   { path: '/admin/reservations', label: '예약 관리', icon: CalendarCheck },
   { path: '/admin/payments', label: '결제 관리', icon: CreditCard },
   { path: '/admin/users', label: '회원 관리', icon: Users },
+  { path: '/admin/packages', label: '패키지 관리', icon: Package },
 ];
 
 export default function AdminLayout() {

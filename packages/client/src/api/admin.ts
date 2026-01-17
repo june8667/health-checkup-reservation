@@ -81,3 +81,57 @@ export async function getAdminUsers(params: {
   );
   return data;
 }
+
+// 패키지 관리 API
+export async function getAdminPackages(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  isActive?: boolean;
+}) {
+  const { data } = await apiClient.get<{ success: boolean; data: PaginatedResponse<any> }>(
+    '/admin/packages',
+    { params }
+  );
+  return data;
+}
+
+export async function getAdminPackageById(id: string) {
+  const { data } = await apiClient.get(`/admin/packages/${id}`);
+  return data;
+}
+
+export interface PackageInput {
+  name: string;
+  description: string;
+  category: 'basic' | 'standard' | 'premium' | 'specialized';
+  items: { name: string; description?: string }[];
+  price: number;
+  discountPrice?: number;
+  duration: number;
+  hospitalId: string;
+  targetGender: 'male' | 'female' | 'all';
+  targetAgeMin?: number;
+  targetAgeMax?: number;
+  availableDays: number[];
+  maxReservationsPerSlot: number;
+  isActive: boolean;
+  displayOrder: number;
+  tags?: string[];
+}
+
+export async function createAdminPackage(data: PackageInput) {
+  const response = await apiClient.post('/admin/packages', data);
+  return response.data;
+}
+
+export async function updateAdminPackage(id: string, data: Partial<PackageInput>) {
+  const response = await apiClient.put(`/admin/packages/${id}`, data);
+  return response.data;
+}
+
+export async function deleteAdminPackage(id: string) {
+  const response = await apiClient.delete(`/admin/packages/${id}`);
+  return response.data;
+}
