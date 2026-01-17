@@ -135,3 +135,37 @@ export async function deleteAdminPackage(id: string) {
   const response = await apiClient.delete(`/admin/packages/${id}`);
   return response.data;
 }
+
+// 차단된 시간 관리 API
+export async function getBlockedSlots(params: {
+  startDate: string;
+  endDate: string;
+  packageId?: string;
+}) {
+  const response = await apiClient.get('/admin/blocked-slots', { params });
+  return response.data;
+}
+
+export async function createBlockedSlot(data: {
+  date: string;
+  time?: string;
+  times?: string[];
+  packageId?: string;
+  reason?: string;
+}) {
+  const response = await apiClient.post('/admin/blocked-slots', data);
+  return response.data;
+}
+
+export async function deleteBlockedSlot(id: string) {
+  const response = await apiClient.delete(`/admin/blocked-slots/${id}`);
+  return response.data;
+}
+
+export async function clearBlockedSlotsByDate(data: {
+  date: string;
+  packageId?: string;
+}) {
+  const response = await apiClient.post('/admin/blocked-slots/clear', data);
+  return response.data;
+}
