@@ -32,12 +32,12 @@ export default function Users() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">회원 관리</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">회원 관리</h1>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -45,20 +45,20 @@ export default function Users() {
                 placeholder="이름, 이메일, 연락처 검색"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="text-gray-400 w-5 h-5" />
+            <Filter className="text-gray-400 w-5 h-5 hidden sm:block" />
             <select
               value={role}
               onChange={(e) => {
                 setRole(e.target.value);
                 setPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="flex-1 sm:flex-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {ROLE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -66,14 +66,56 @@ export default function Users() {
                 </option>
               ))}
             </select>
+            <Button type="submit" className="flex-shrink-0">검색</Button>
           </div>
-
-          <Button type="submit">검색</Button>
         </form>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* 모바일 카드 뷰 */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">
+            로딩 중...
+          </div>
+        ) : users.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+            회원이 없습니다.
+          </div>
+        ) : (
+          users.map((user: any) => (
+            <div key={user._id} className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="font-medium text-gray-900">{user.name}</div>
+                  <div className="text-sm text-gray-500">{user.email}</div>
+                </div>
+                <RoleBadge role={user.role} />
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-400">연락처</span>
+                  <p className="text-gray-700">{user.phone}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">성별</span>
+                  <p className="text-gray-700">{user.gender === 'male' ? '남성' : '여성'}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">생년월일</span>
+                  <p className="text-gray-700">{format(new Date(user.birthDate), 'yyyy-MM-dd', { locale: ko })}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">가입일</span>
+                  <p className="text-gray-700">{format(new Date(user.createdAt), 'yyyy-MM-dd', { locale: ko })}</p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 데스크톱 테이블 뷰 */}
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -147,36 +189,36 @@ export default function Users() {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              총 {data?.data?.total}건 중 {(page - 1) * 20 + 1}-
-              {Math.min(page * 20, data?.data?.total || 0)}건
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                이전
-              </button>
-              <span className="px-3 py-1 text-sm">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page === totalPages}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                다음
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 px-4 py-3 bg-white rounded-lg shadow flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-sm text-gray-500 order-2 sm:order-1">
+            총 {data?.data?.total}건 중 {(page - 1) * 20 + 1}-
+            {Math.min(page * 20, data?.data?.total || 0)}건
+          </div>
+          <div className="flex gap-2 order-1 sm:order-2">
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              이전
+            </button>
+            <span className="px-3 py-1 text-sm">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
