@@ -1,8 +1,49 @@
-import { Link } from 'react-router-dom';
-import { Calendar, Shield, Clock, Award } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Shield, Clock, Award, UserCog, User } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Button from '../components/common/Button';
+import { testLoginAdmin, testLoginUser } from '../api/auth';
+import { useAuthStore } from '../store/authStore';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
+  const [isUserLoading, setIsUserLoading] = useState(false);
+
+  const handleAdminLogin = async () => {
+    setIsAdminLoading(true);
+    try {
+      const result = await testLoginAdmin();
+      if (result.success && result.data) {
+        setAuth(result.data.user, result.data.accessToken);
+        toast.success('관리자로 로그인되었습니다.');
+        navigate('/admin');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsAdminLoading(false);
+    }
+  };
+
+  const handleUserLogin = async () => {
+    setIsUserLoading(true);
+    try {
+      const result = await testLoginUser();
+      if (result.success && result.data) {
+        setAuth(result.data.user, result.data.accessToken);
+        toast.success(result.message || `${result.data.user.name}(으)로 로그인되었습니다.`);
+        navigate('/mypage');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsUserLoading(false);
+    }
+  };
+
   const features = [
     {
       icon: Calendar,
@@ -51,6 +92,33 @@ export default function Home() {
                   지금 예약하기
                 </Button>
               </Link>
+            </div>
+
+            {/* 테스트용 버튼 */}
+            <div className="mt-8 pt-6 border-t border-primary-500/30">
+              <p className="text-sm text-primary-200 mb-3">테스트용 빠른 로그인</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="!border-yellow-400 !text-yellow-400 hover:!bg-yellow-400/10"
+                  onClick={handleAdminLogin}
+                  isLoading={isAdminLoading}
+                >
+                  <UserCog className="w-5 h-5 mr-2" />
+                  관리자로 입장하기
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="!border-green-400 !text-green-400 hover:!bg-green-400/10"
+                  onClick={handleUserLogin}
+                  isLoading={isUserLoading}
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  회원으로 입장하기
+                </Button>
+              </div>
             </div>
           </div>
         </div>

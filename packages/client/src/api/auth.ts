@@ -53,3 +53,15 @@ export async function createFakeUsers(count: number = 1000): Promise<ApiResponse
   const response = await apiClient.post('/test/fake-users', { count });
   return response.data;
 }
+
+// 테스트용: 관리자로 로그인
+export async function testLoginAdmin(): Promise<ApiResponse<{ user: User; accessToken: string }>> {
+  const response = await apiClient.post('/test/login-admin');
+  return response.data;
+}
+
+// 테스트용: 랜덤 회원으로 로그인
+export async function testLoginUser(): Promise<ApiResponse<{ user: User; accessToken: string }>> {
+  const response = await apiClient.post('/test/login-user');
+  return response.data;
+}

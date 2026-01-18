@@ -11,6 +11,7 @@ import { Reservation } from '../models/Reservation';
 import { Payment } from '../models/Payment';
 import { Hospital } from '../models/Hospital';
 import { Package } from '../models/Package';
+import { generateAccessToken } from '../utils/jwt';
 
 const router = Router();
 
@@ -255,6 +256,78 @@ router.post('/test/fake-users', async (req, res) => {
   } catch (error) {
     console.error('Fake users error:', error);
     res.status(500).json({ success: false, message: '가짜 회원 생성에 실패했습니다.' });
+  }
+});
+
+// 테스트용: 랜덤 관리자로 로그인
+router.post('/test/login-admin', async (req, res) => {
+  try {
+    const admin = await User.findOne({ role: 'admin' });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: '관리자 계정이 없습니다.' });
+    }
+
+    const accessToken = generateAccessToken(admin);
+
+    admin.lastLoginAt = new Date();
+    await admin.save();
+
+    res.json({
+      success: true,
+      message: '관리자로 로그인되었습니다.',
+      data: {
+        user: {
+          _id: admin._id,
+          email: admin.email,
+          name: admin.name,
+          role: admin.role,
+        },
+        accessToken,
+      },
+    });
+  } catch (error) {
+    console.error('Test admin login error:', error);
+    res.status(500).json({ success: false, message: '로그인에 실패했습니다.' });
+  }
+});
+
+// 테스트용: 랜덤 일반회원으로 로그인
+router.post('/test/login-user', async (req, res) => {
+  try {
+    // 관리자가 아닌 일반 회원 중 랜덤 선택
+    const count = await User.countDocuments({ role: 'user' });
+    if (count === 0) {
+      return res.status(404).json({ success: false, message: '일반 회원이 없습니다.' });
+    }
+
+    const randomIndex = Math.floor(Math.random() * count);
+    const user = await User.findOne({ role: 'user' }).skip(randomIndex);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+    }
+
+    const accessToken = generateAccessToken(user);
+
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `${user.name}(으)로 로그인되었습니다.`,
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        accessToken,
+      },
+    });
+  } catch (error) {
+    console.error('Test user login error:', error);
+    res.status(500).json({ success: false, message: '로그인에 실패했습니다.' });
   }
 });
 
