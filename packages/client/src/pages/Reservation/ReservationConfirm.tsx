@@ -52,9 +52,8 @@ export default function ReservationConfirm() {
       });
 
       if (response.success && response.data) {
-        toast.success('예약이 완료되었습니다.');
         reset();
-        navigate('/mypage');
+        navigate(`/reservation/complete/${response.data._id}`);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '예약에 실패했습니다.');

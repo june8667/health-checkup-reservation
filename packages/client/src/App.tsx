@@ -11,6 +11,7 @@ import SelectPackage from './pages/Reservation/SelectPackage';
 import SelectDate from './pages/Reservation/SelectDate';
 import PatientInfo from './pages/Reservation/PatientInfo';
 import ReservationConfirm from './pages/Reservation/ReservationConfirm';
+import ReservationComplete from './pages/Reservation/ReservationComplete';
 import Payment from './pages/Payment';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFail from './pages/PaymentFail';
@@ -47,6 +48,7 @@ function App() {
             <Route path="patient-info" element={<PatientInfo />} />
             <Route path="confirm" element={<ReservationConfirm />} />
           </Route>
+          <Route path="reservation/complete/:id" element={<ReservationComplete />} />
 
           <Route path="payment/:reservationId" element={<Payment />} />
           <Route path="payment/success" element={<PaymentSuccess />} />
