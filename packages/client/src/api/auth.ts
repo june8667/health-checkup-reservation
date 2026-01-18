@@ -47,3 +47,9 @@ export async function seedSampleData(): Promise<ApiResponse> {
   const response = await apiClient.post('/test/seed');
   return response.data;
 }
+
+// 테스트용: 가짜 회원 생성
+export async function createFakeUsers(count: number = 1000): Promise<ApiResponse> {
+  const response = await apiClient.post('/test/fake-users', { count });
+  return response.data;
+}

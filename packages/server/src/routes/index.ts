@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import packageRoutes from './package.routes';
@@ -179,6 +180,81 @@ router.post('/test/seed', async (req, res) => {
   } catch (error) {
     console.error('Seed error:', error);
     res.status(500).json({ success: false, message: '샘플 데이터 생성에 실패했습니다.' });
+  }
+});
+
+// 테스트용: 가짜 회원 1000명 생성
+router.post('/test/fake-users', async (req, res) => {
+  try {
+    const count = req.body.count || 1000;
+    const hashedPassword = await bcrypt.hash('test1234', 10);
+
+    // 한국 이름 생성용 데이터
+    const lastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '홍'];
+    const firstNamesMale = ['민준', '서준', '도윤', '예준', '시우', '주원', '하준', '지호', '준서', '준우', '현우', '지훈', '도현', '건우', '우진', '민재', '현준', '선우', '서진', '연우'];
+    const firstNamesFemale = ['서윤', '서연', '지우', '하윤', '하은', '민서', '지유', '윤서', '채원', '수아', '지아', '다은', '예은', '수빈', '지민', '채은', '유진', '소윤', '예린', '시은'];
+
+    const users = [];
+    const existingEmails = new Set((await User.find({}, 'email')).map(u => u.email));
+
+    for (let i = 0; i < count; i++) {
+      const gender = Math.random() > 0.5 ? 'male' : 'female';
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const firstName = gender === 'male'
+        ? firstNamesMale[Math.floor(Math.random() * firstNamesMale.length)]
+        : firstNamesFemale[Math.floor(Math.random() * firstNamesFemale.length)];
+      const name = lastName + firstName;
+
+      // 고유한 이메일 생성
+      let email;
+      let attempts = 0;
+      do {
+        const randomNum = Math.floor(Math.random() * 100000);
+        email = `fake${i}_${randomNum}@test.com`;
+        attempts++;
+      } while (existingEmails.has(email) && attempts < 10);
+
+      existingEmails.add(email);
+
+      // 랜덤 생년월일 (1960~2005년)
+      const year = 1960 + Math.floor(Math.random() * 45);
+      const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0');
+      const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0');
+      const birthDate = `${year}-${month}-${day}`;
+
+      // 랜덤 전화번호
+      const phone = `010${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`;
+
+      users.push({
+        email,
+        password: hashedPassword,
+        name,
+        phone,
+        birthDate,
+        gender,
+        role: 'user',
+        isPhoneVerified: true,
+        marketingConsent: Math.random() > 0.5,
+      });
+    }
+
+    // 배치로 삽입 (100개씩)
+    const batchSize = 100;
+    let inserted = 0;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      await User.insertMany(batch, { ordered: false }).catch(() => {});
+      inserted += batch.length;
+    }
+
+    res.json({
+      success: true,
+      message: `가짜 회원 ${count}명이 생성되었습니다.`,
+      data: { count: inserted },
+    });
+  } catch (error) {
+    console.error('Fake users error:', error);
+    res.status(500).json({ success: false, message: '가짜 회원 생성에 실패했습니다.' });
   }
 });
 

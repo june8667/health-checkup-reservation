@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData, seedSampleData } from '../api/auth';
+import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData, seedSampleData, createFakeUsers } from '../api/auth';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 
@@ -32,6 +32,7 @@ export default function Register() {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // 테스트용 관리자 권한
+  const [isCreatingFakeUsers, setIsCreatingFakeUsers] = useState(false);
 
   const {
     register,
@@ -292,6 +293,28 @@ export default function Register() {
                   데이터 삭제
                 </Button>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-purple-600 border-purple-300 hover:bg-purple-50"
+                isLoading={isCreatingFakeUsers}
+                onClick={async () => {
+                  if (window.confirm('가짜 회원 1000명을 생성합니다. 계속하시겠습니까?')) {
+                    setIsCreatingFakeUsers(true);
+                    try {
+                      const result = await createFakeUsers(1000);
+                      toast.success(result.message || '가짜 회원 1000명이 생성되었습니다.');
+                    } catch (error) {
+                      toast.error('가짜 회원 생성에 실패했습니다.');
+                    } finally {
+                      setIsCreatingFakeUsers(false);
+                    }
+                  }
+                }}
+              >
+                가짜 회원 1000명 생성
+              </Button>
             </div>
 
             <Button
