@@ -219,18 +219,18 @@ export default function Packages() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">패키지 관리</h1>
-        <Button onClick={openCreateModal}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">패키지 관리</h1>
+        <Button onClick={openCreateModal} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           새 패키지 등록
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -238,20 +238,20 @@ export default function Packages() {
                 placeholder="패키지명, 설명 검색"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="text-gray-400 w-5 h-5" />
+            <Filter className="text-gray-400 w-5 h-5 hidden sm:block" />
             <select
               value={category}
               onChange={(e) => {
                 setCategory(e.target.value);
                 setPage(1);
               }}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="flex-1 sm:flex-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {CATEGORY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -259,14 +259,80 @@ export default function Packages() {
                 </option>
               ))}
             </select>
+            <Button type="submit" className="flex-shrink-0">검색</Button>
           </div>
-
-          <Button type="submit">검색</Button>
         </form>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* 모바일 카드 뷰 */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">
+            로딩 중...
+          </div>
+        ) : packages.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+            등록된 패키지가 없습니다.
+          </div>
+        ) : (
+          packages.map((pkg: any) => (
+            <div key={pkg._id} className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CategoryBadge category={pkg.category} />
+                    <span
+                      className={`px-2 text-xs font-semibold rounded-full ${
+                        pkg.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {pkg.isActive ? '활성' : '비활성'}
+                    </span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">{pkg.name}</h3>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(pkg)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(pkg._id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-3 line-clamp-2">{pkg.description}</p>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  {pkg.discountPrice ? (
+                    <div className="flex items-center gap-2">
+                      <span className="line-through text-gray-400">
+                        {pkg.price.toLocaleString()}원
+                      </span>
+                      <span className="text-red-600 font-bold">
+                        {pkg.discountPrice.toLocaleString()}원
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-medium">{pkg.price.toLocaleString()}원</span>
+                  )}
+                </div>
+                <span className="text-gray-500">{pkg.duration}분</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 데스크톱 테이블 뷰 */}
+      <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -373,43 +439,43 @@ export default function Packages() {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              총 {data?.data?.total}건 중 {(page - 1) * 20 + 1}-
-              {Math.min(page * 20, data?.data?.total || 0)}건
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                이전
-              </button>
-              <span className="px-3 py-1 text-sm">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page === totalPages}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                다음
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 px-4 py-3 bg-white rounded-lg shadow flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-sm text-gray-500 order-2 sm:order-1">
+            총 {data?.data?.total}건 중 {(page - 1) * 20 + 1}-
+            {Math.min(page * 20, data?.data?.total || 0)}건
+          </div>
+          <div className="flex gap-2 order-1 sm:order-2">
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              이전
+            </button>
+            <span className="px-3 py-1 text-sm">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-lg sm:text-xl font-bold">
                 {editingPackage ? '패키지 수정' : '새 패키지 등록'}
               </h2>
               <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
@@ -417,7 +483,7 @@ export default function Packages() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   패키지명 *
@@ -444,7 +510,7 @@ export default function Packages() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     카테고리 *
@@ -490,7 +556,7 @@ export default function Packages() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     가격 (원) *
@@ -524,7 +590,7 @@ export default function Packages() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     소요시간 (분) *
@@ -578,30 +644,32 @@ export default function Packages() {
                 </label>
                 <div className="space-y-2">
                   {formData.items.map((item, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={index} className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={item.name}
                         onChange={(e) => updateItem(index, 'name', e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="검진 항목명"
                       />
-                      <input
-                        type="text"
-                        value={item.description || ''}
-                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="설명 (선택)"
-                      />
-                      {formData.items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={item.description || ''}
+                          onChange={(e) => updateItem(index, 'description', e.target.value)}
+                          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="설명 (선택)"
+                        />
+                        {formData.items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(index)}
+                            className="text-red-500 hover:text-red-700 p-2"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   <button
@@ -618,13 +686,13 @@ export default function Packages() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   예약 가능 요일
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {DAY_OPTIONS.map((day) => (
                     <button
                       key={day.value}
                       type="button"
                       onClick={() => toggleDay(day.value)}
-                      className={`w-10 h-10 rounded-full text-sm font-medium ${
+                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm font-medium ${
                         formData.availableDays.includes(day.value)
                           ? 'bg-primary-600 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -649,13 +717,14 @@ export default function Packages() {
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={closeModal}>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t sticky bottom-0 bg-white pb-2">
+                <Button type="button" variant="outline" onClick={closeModal} className="w-full sm:w-auto">
                   취소
                 </Button>
                 <Button
                   type="submit"
                   isLoading={createMutation.isPending || updateMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
                   {editingPackage ? '수정' : '등록'}
                 </Button>

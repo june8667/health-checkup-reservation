@@ -35,10 +35,10 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 모바일 헤더 */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 bg-gray-900 text-white z-40 px-4 py-3 flex items-center justify-between">
+      <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 text-gray-900 z-40 px-4 py-3 flex items-center justify-between shadow-sm">
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="p-2 hover:bg-gray-800 rounded-lg"
+          className="p-2 hover:bg-gray-100 rounded-lg"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -107,7 +107,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-64 pt-14 lg:pt-0 p-4 sm:p-6 lg:p-8">
+      <main className="lg:ml-64 pt-16 lg:pt-0 p-4 sm:p-6 lg:p-8">
         <Outlet />
       </main>
     </div>
