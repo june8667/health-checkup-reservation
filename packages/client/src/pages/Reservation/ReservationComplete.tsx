@@ -89,6 +89,11 @@ export default function ReservationComplete() {
                 <span className="text-gray-500">검진 패키지</span>
                 <span className="font-medium">{pkg?.name || '-'}</span>
               </div>
+              {pkg?.description && (
+                <div className="text-gray-600 text-xs bg-gray-50 p-2 rounded">
+                  {pkg.description}
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500">검진 일시</span>
                 <span className="font-medium">
@@ -103,6 +108,26 @@ export default function ReservationComplete() {
                 <span className="text-gray-500">결제 금액</span>
                 <span className="font-medium text-primary-600">{formatPrice(reservation.finalAmount)}원</span>
               </div>
+
+              {/* 검진 항목 */}
+              {pkg?.items && pkg.items.length > 0 && (
+                <div className="pt-3 border-t">
+                  <span className="text-gray-500 block mb-2">검진 항목</span>
+                  <ul className="space-y-1">
+                    {pkg.items.map((item: any, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-700">
+                        <span className="text-primary-500 mt-0.5">•</span>
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          {item.description && (
+                            <span className="text-gray-500 text-xs ml-1">- {item.description}</span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
