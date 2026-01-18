@@ -150,11 +150,11 @@ export default function ReservationConfirm() {
           </ul>
         </div>
 
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={handleBack}>
+        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+          <Button variant="outline" onClick={handleBack} className="w-full sm:w-auto">
             이전
           </Button>
-          <Button onClick={handleSubmit} isLoading={isLoading} size="lg">
+          <Button onClick={handleSubmit} isLoading={isLoading} size="lg" className="w-full sm:w-auto">
             결제하기
           </Button>
         </div>

@@ -369,29 +369,30 @@ export default function Schedule() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">스케줄 관리</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">스케줄 관리</h1>
+        <div className="flex gap-2 w-full sm:w-auto">
           {selectedSlots.size > 0 && (
             <Button
               onClick={handleBlockSelected}
               isLoading={createMutation.isPending}
+              className="w-full sm:w-auto text-sm"
             >
-              <Lock className="w-4 h-4 mr-2" />
-              선택한 {selectedSlots.size}개 차단
+              <Lock className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">선택한 </span>{selectedSlots.size}개 차단
             </Button>
           )}
         </div>
       </div>
 
       {/* 필터 및 네비게이션 */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <select
               value={selectedPackageId}
               onChange={(e) => setSelectedPackageId(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="flex-1 sm:flex-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">전체 패키지</option>
               {packages.map((pkg: any) => (
@@ -402,7 +403,7 @@ export default function Schedule() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
             <button
               onClick={prevWeek}
               className="p-2 hover:bg-gray-100 rounded-lg"
@@ -411,11 +412,11 @@ export default function Schedule() {
             </button>
             <button
               onClick={goToToday}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
             >
               오늘
             </button>
-            <span className="px-4 py-2 font-medium">
+            <span className="px-2 sm:px-4 py-2 text-sm sm:text-base font-medium whitespace-nowrap">
               {format(currentWeekStart, 'yyyy년 M월', { locale: ko })}
             </span>
             <button
@@ -429,29 +430,29 @@ export default function Schedule() {
       </div>
 
       {/* 시간표 */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden -mx-4 sm:mx-0 sm:rounded-lg">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-14 sm:w-20 sticky left-0 bg-gray-50 z-10">
                   시간
                 </th>
                 {weekDays.map((day) => (
                   <th
                     key={day.toISOString()}
-                    className={`px-2 py-3 text-center text-xs font-medium uppercase tracking-wider min-w-[100px] ${
+                    className={`px-1 sm:px-2 py-2 sm:py-3 text-center text-xs font-medium uppercase tracking-wider min-w-[70px] sm:min-w-[100px] ${
                       isSunday(day) ? 'text-red-500 bg-red-50' : 'text-gray-500'
                     }`}
                   >
                     <div>{format(day, 'EEE', { locale: ko })}</div>
-                    <div className="text-lg font-bold">{format(day, 'd')}</div>
+                    <div className="text-base sm:text-lg font-bold">{format(day, 'd')}</div>
                     {!isSunday(day) && blockedSlots.some((s: any) =>
                       format(new Date(s.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
                     ) && (
                       <button
                         onClick={() => handleClearDay(day)}
-                        className="mt-1 text-xs text-red-500 hover:text-red-700"
+                        className="mt-1 text-[10px] sm:text-xs text-red-500 hover:text-red-700"
                       >
                         전체해제
                       </button>
@@ -470,7 +471,7 @@ export default function Schedule() {
               ) : (
                 DEFAULT_TIME_SLOTS.map((time) => (
                   <tr key={time} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                    <td className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-gray-900 sticky left-0 bg-white z-10">
                       {time}
                     </td>
                     {weekDays.map((day) => {
@@ -490,7 +491,7 @@ export default function Schedule() {
                       return (
                         <td
                           key={`${day.toISOString()}-${time}`}
-                          className={`px-2 py-2 text-center ${highlighted ? 'ring-2 ring-yellow-400 bg-yellow-50' : ''}`}
+                          className={`px-1 sm:px-2 py-1 sm:py-2 text-center ${highlighted ? 'ring-2 ring-yellow-400 bg-yellow-50' : ''}`}
                         >
                           {sunday ? (
                             <div className="py-2 text-xs text-gray-400 bg-gray-50 rounded">휴무</div>
@@ -572,50 +573,60 @@ export default function Schedule() {
       </div>
 
       {/* 범례 및 안내 */}
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-        <div className="flex flex-wrap gap-4 mb-4">
+      <div className="mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-600">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-100 border border-green-200 rounded flex-shrink-0"></div>
             <span>예약확정</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-100 border border-blue-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-100 border border-blue-200 rounded flex-shrink-0"></div>
             <span>검진완료</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-orange-100 border border-orange-200 rounded flex-shrink-0"></div>
             <span>노쇼</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-100 border border-gray-300 rounded flex-shrink-0"></div>
             <span>취소</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-50 border border-blue-200 rounded flex-shrink-0"></div>
             <span>예약가능</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-100 border border-red-200 rounded flex-shrink-0"></div>
             <span>차단됨</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-50 border border-red-100 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-50 border border-red-100 rounded flex-shrink-0"></div>
             <span>지난시간</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-50 border border-gray-200 rounded flex-shrink-0"></div>
             <span>휴무</span>
           </div>
         </div>
-        <p className="font-medium mb-2">사용 방법:</p>
-        <ul className="list-disc list-inside space-y-1">
-          <li>예약확정 카드를 드래그하여 다른 예약가능 시간으로 이동할 수 있습니다.</li>
-          <li>예약 카드를 클릭하면 상세 정보 확인 및 상태 변경이 가능합니다.</li>
-          <li>차단할 시간을 클릭하여 선택한 후 "선택한 N개 차단" 버튼을 클릭하세요.</li>
-          <li>차단된 시간을 클릭하면 차단을 해제할 수 있습니다.</li>
-          <li>특정 패키지만 차단하려면 상단에서 패키지를 선택하세요.</li>
-          <li>일요일은 기본 휴무일입니다.</li>
-        </ul>
+        <details className="sm:hidden">
+          <summary className="font-medium mb-2 cursor-pointer">사용 방법 보기</summary>
+          <ul className="list-disc list-inside space-y-1 mt-2">
+            <li>예약 카드를 클릭하면 상세 정보를 확인할 수 있습니다.</li>
+            <li>차단할 시간을 클릭하여 선택 후 차단 버튼을 누르세요.</li>
+            <li>차단된 시간을 클릭하면 해제됩니다.</li>
+          </ul>
+        </details>
+        <div className="hidden sm:block">
+          <p className="font-medium mb-2">사용 방법:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>예약확정 카드를 드래그하여 다른 예약가능 시간으로 이동할 수 있습니다.</li>
+            <li>예약 카드를 클릭하면 상세 정보 확인 및 상태 변경이 가능합니다.</li>
+            <li>차단할 시간을 클릭하여 선택한 후 "선택한 N개 차단" 버튼을 클릭하세요.</li>
+            <li>차단된 시간을 클릭하면 차단을 해제할 수 있습니다.</li>
+            <li>특정 패키지만 차단하려면 상단에서 패키지를 선택하세요.</li>
+            <li>일요일은 기본 휴무일입니다.</li>
+          </ul>
+        </div>
       </div>
 
       {/* 예약 상세 모달 */}

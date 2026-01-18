@@ -62,3 +62,46 @@ body {
     @apply text-2xl font-bold text-gray-900 mb-6;
   }
 }
+
+/* React Calendar 반응형 스타일 */
+.react-calendar {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-family: inherit;
+}
+
+.react-calendar__tile {
+  padding: 0.5em 0.25em !important;
+}
+
+@media (max-width: 640px) {
+  .react-calendar {
+    font-size: 0.875rem;
+  }
+
+  .react-calendar__tile {
+    padding: 0.4em 0.2em !important;
+  }
+
+  .react-calendar__navigation button {
+    font-size: 0.875rem;
+    min-width: 36px;
+  }
+}
+
+/* 관리자 테이블 반응형 */
+@media (max-width: 768px) {
+  .admin-table-container {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+
+  .admin-table-container table {
+    font-size: 0.75rem;
+  }
+
+  .admin-table-container th,
+  .admin-table-container td {
+    padding: 0.5rem;
+  }
+}

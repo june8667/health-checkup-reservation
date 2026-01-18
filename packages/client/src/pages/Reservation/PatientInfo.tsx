@@ -137,11 +137,11 @@ export default function PatientInfo() {
             />
           </div>
 
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={handleBack}>
+          <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={handleBack} className="w-full sm:w-auto">
               이전
             </Button>
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" className="w-full sm:w-auto">
               다음 단계
             </Button>
           </div>

@@ -89,7 +89,7 @@ export default function SelectDate() {
           {!selectedDate ? (
             <p className="text-gray-500 text-center py-8">날짜를 먼저 선택해주세요.</p>
           ) : slotsLoading ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {[...Array(9)].map((_, i) => (
                 <div key={i} className="h-10 bg-gray-200 rounded animate-pulse"></div>
               ))}
@@ -99,7 +99,7 @@ export default function SelectDate() {
               선택한 날짜에 예약 가능한 시간이 없습니다.
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {slots.map((slot) => (
                 <button
                   key={slot.time}
@@ -138,11 +138,11 @@ export default function SelectDate() {
         </div>
       )}
 
-      <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={handleBack}>
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-8">
+        <Button variant="outline" onClick={handleBack} className="w-full sm:w-auto">
           이전
         </Button>
-        <Button onClick={handleNext} disabled={!selectedDate || !selectedTime} size="lg">
+        <Button onClick={handleNext} disabled={!selectedDate || !selectedTime} size="lg" className="w-full sm:w-auto">
           다음 단계
         </Button>
       </div>
