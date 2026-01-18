@@ -111,8 +111,8 @@ export class ReservationService {
 
     const [reservations, total] = await Promise.all([
       Reservation.find(query)
-        .populate('packageId', 'name price discountPrice')
-        .populate('hospitalId', 'name address')
+        .populate('packageId', 'name price discountPrice description items')
+        .populate('hospitalId', 'name address phone')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
