@@ -602,7 +602,7 @@ export default function Schedule() {
                                     onTouchEnd={isDraggable ? handleTouchEnd : undefined}
                                     onTouchCancel={isDraggable ? handleTouchCancel : undefined}
                                     onClick={() => !moveMode && openReservationModal(res)}
-                                    className={`w-full py-1 px-1 ${statusStyle.bg} ${statusStyle.text} rounded text-xs font-medium border ${statusStyle.border} hover:opacity-80 transition-opacity cursor-pointer ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''} ${moveMode && movingReservation?._id === res._id ? 'ring-2 ring-primary-500 animate-pulse' : ''}`}
+                                    className={`w-full py-1 px-1 rounded text-xs font-medium border hover:opacity-80 transition-opacity cursor-pointer ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''} ${moveMode && movingReservation?._id === res._id ? 'bg-red-100 text-red-800 border-red-400 ring-2 ring-red-400 animate-pulse' : `${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}`}
                                     title="클릭하여 상세 보기 (길게 누르면 이동)"
                                   >
                                     <div className="flex items-center justify-center gap-1">
