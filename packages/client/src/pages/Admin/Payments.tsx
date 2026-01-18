@@ -39,7 +39,7 @@ export default function Payments() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">결제 관리</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">결제 관리</h1>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">

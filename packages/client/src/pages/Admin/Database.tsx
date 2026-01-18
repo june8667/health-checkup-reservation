@@ -77,7 +77,7 @@ export default function DatabaseAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">DB 관리</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">DB 관리</h1>
 
       <div className="grid gap-6">
         {/* 백업 카드 */}
