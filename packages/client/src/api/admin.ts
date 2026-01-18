@@ -200,3 +200,20 @@ export async function getScheduleReservations(params: {
   });
   return response.data;
 }
+
+// 데이터베이스 백업
+export async function downloadDatabaseBackup() {
+  const response = await apiClient.get('/admin/database/backup', {
+    responseType: 'blob',
+  });
+
+  const blob = new Blob([response.data], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `db-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}

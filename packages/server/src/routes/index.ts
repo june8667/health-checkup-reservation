@@ -58,18 +58,18 @@ router.post('/test/seed', async (req, res) => {
       phone: '02-1234-5678',
       email: 'info@healthcenter.com',
       businessHours: [
-        { dayOfWeek: 0, openTime: '09:00', closeTime: '13:00', isHoliday: true }, // 일요일 휴무
-        { dayOfWeek: 1, openTime: '08:00', closeTime: '17:00', isHoliday: false },
-        { dayOfWeek: 2, openTime: '08:00', closeTime: '17:00', isHoliday: false },
-        { dayOfWeek: 3, openTime: '08:00', closeTime: '17:00', isHoliday: false },
-        { dayOfWeek: 4, openTime: '08:00', closeTime: '17:00', isHoliday: false },
-        { dayOfWeek: 5, openTime: '08:00', closeTime: '17:00', isHoliday: false },
-        { dayOfWeek: 6, openTime: '09:00', closeTime: '13:00', isHoliday: false }, // 토요일 오전만
+        { dayOfWeek: 0, openTime: '10:00', closeTime: '13:00', isHoliday: true }, // 일요일 휴무
+        { dayOfWeek: 1, openTime: '10:00', closeTime: '18:00', isHoliday: false },
+        { dayOfWeek: 2, openTime: '10:00', closeTime: '18:00', isHoliday: false },
+        { dayOfWeek: 3, openTime: '10:00', closeTime: '18:00', isHoliday: false },
+        { dayOfWeek: 4, openTime: '10:00', closeTime: '18:00', isHoliday: false },
+        { dayOfWeek: 5, openTime: '10:00', closeTime: '18:00', isHoliday: false },
+        { dayOfWeek: 6, openTime: '10:00', closeTime: '13:00', isHoliday: false }, // 토요일 오전만
       ],
       timeSlots: [
-        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-        '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-        '15:00', '15:30', '16:00', '16:30',
+        '10:00', '10:30', '11:00', '11:30',
+        '13:00', '13:30', '14:00', '14:30',
+        '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
       ],
       facilities: ['주차장', '엘리베이터', '휠체어', '수유실'],
       parkingInfo: '지하 주차장 2시간 무료',

@@ -17,6 +17,7 @@ import {
   createBlockedSlot,
   deleteBlockedSlot,
   deleteBlockedSlotsByDate,
+  backupDatabase,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -52,5 +53,8 @@ router.get('/blocked-slots', getBlockedSlots);
 router.post('/blocked-slots', createBlockedSlot);
 router.delete('/blocked-slots/:id', deleteBlockedSlot);
 router.post('/blocked-slots/clear', deleteBlockedSlotsByDate);
+
+// Database management
+router.get('/database/backup', backupDatabase);
 
 export default router;

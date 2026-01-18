@@ -1,6 +1,12 @@
 import { Response, NextFunction } from 'express';
 import { AdminService } from '../services/admin.service';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { User } from '../models/User';
+import { Reservation } from '../models/Reservation';
+import { Payment } from '../models/Payment';
+import { Package } from '../models/Package';
+import { Hospital } from '../models/Hospital';
+import { BlockedSlot } from '../models/BlockedSlot';
 
 const adminService = new AdminService();
 
@@ -456,6 +462,44 @@ export async function deleteBlockedSlotsByDate(
       success: true,
       message: '해당 날짜의 차단이 모두 해제되었습니다.',
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Database backup
+export async function backupDatabase(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const [users, reservations, payments, packages, hospitals, blockedSlots] = await Promise.all([
+      User.find().lean(),
+      Reservation.find().lean(),
+      Payment.find().lean(),
+      Package.find().lean(),
+      Hospital.find().lean(),
+      BlockedSlot.find().lean(),
+    ]);
+
+    const backup = {
+      exportedAt: new Date().toISOString(),
+      collections: {
+        users,
+        reservations,
+        payments,
+        packages,
+        hospitals,
+        blockedSlots,
+      },
+    };
+
+    const filename = `db-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(JSON.stringify(backup, null, 2));
   } catch (error) {
     next(error);
   }

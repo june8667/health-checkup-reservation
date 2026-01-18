@@ -8,6 +8,7 @@ import {
   Users,
   Package,
   Clock,
+  Database,
   ArrowLeft,
   Menu,
   X,
@@ -20,6 +21,7 @@ const navItems = [
   { path: '/admin/users', label: '회원 관리', icon: Users },
   { path: '/admin/packages', label: '패키지 관리', icon: Package },
   { path: '/admin/schedule', label: '스케줄 관리', icon: Clock },
+  { path: '/admin/database', label: 'DB 관리', icon: Database },
 ];
 
 export default function AdminLayout() {

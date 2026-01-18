@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { register as registerApi, sendPhoneCode, verifyPhone, resetAllData, seedSampleData, createFakeUsers } from '../api/auth';
+import { register as registerApi, login, sendPhoneCode, verifyPhone, resetAllData, seedSampleData, createFakeUsers } from '../api/auth';
+import { useAuthStore } from '../store/authStore';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 
@@ -14,7 +15,7 @@ const registerSchema = z.object({
   passwordConfirm: z.string(),
   name: z.string().min(2, '이름은 2자 이상이어야 합니다.'),
   phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호 형식이 아닙니다.'),
-  birthDate: z.string().min(1, '생년월일을 입력해주세요.'),
+  birthDate: z.string().regex(/^\d{8}$/, '생년월일 8자리를 입력해주세요. (예: 19900101)'),
   gender: z.enum(['male', 'female'], { required_error: '성별을 선택해주세요.' }),
   marketingConsent: z.boolean().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
@@ -26,6 +27,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
@@ -87,6 +89,13 @@ export default function Register() {
     }
   };
 
+  const formatBirthDate = (date: string): string => {
+    if (date.length === 8) {
+      return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+    }
+    return date;
+  };
+
   const onSubmit = async (data: RegisterForm) => {
     if (!isPhoneVerified) {
       toast.error('휴대폰 인증을 완료해주세요.');
@@ -98,10 +107,17 @@ export default function Register() {
       const { passwordConfirm, ...registerData } = data;
       await registerApi({
         ...registerData,
+        birthDate: formatBirthDate(data.birthDate),
         role: isAdmin ? 'admin' : 'user', // 테스트용 관리자 권한
       });
-      toast.success('회원가입이 완료되었습니다. 로그인해주세요.');
-      navigate('/login');
+
+      // 자동 로그인
+      const loginResponse = await login({ email: data.email, password: data.password });
+      if (loginResponse.success && loginResponse.data) {
+        setAuth(loginResponse.data.user, loginResponse.data.accessToken);
+        toast.success('회원가입이 완료되었습니다.');
+        navigate('/mypage/reservations');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '회원가입에 실패했습니다.');
     } finally {
@@ -202,7 +218,9 @@ export default function Register() {
 
             <Input
               label="생년월일"
-              type="date"
+              type="text"
+              placeholder="19900101 (8자리)"
+              maxLength={8}
               error={errors.birthDate?.message}
               required
               {...register('birthDate')}

@@ -27,6 +27,7 @@ import AdminPayments from './pages/Admin/Payments';
 import AdminUsers from './pages/Admin/Users';
 import AdminPackages from './pages/Admin/Packages';
 import AdminSchedule from './pages/Admin/Schedule';
+import AdminDatabase from './pages/Admin/Database';
 
 function App() {
   return (
@@ -74,6 +75,7 @@ function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="packages" element={<AdminPackages />} />
         <Route path="schedule" element={<AdminSchedule />} />
+        <Route path="database" element={<AdminDatabase />} />
       </Route>
     </Routes>
   );

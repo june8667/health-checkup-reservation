@@ -92,8 +92,8 @@ export default function MyReservations() {
       ) : reservations.length === 0 ? (
         <div className="card p-8 text-center">
           <p className="text-gray-500 mb-4">예약 내역이 없습니다.</p>
-          <Link to="/packages">
-            <Button variant="outline">검진 패키지 보기</Button>
+          <Link to="/reservation">
+            <Button>예약하러가기</Button>
           </Link>
         </div>
       ) : (
