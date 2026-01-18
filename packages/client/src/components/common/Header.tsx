@@ -23,11 +23,10 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="로고" className="h-12 w-auto" />
-              <span className="text-xl font-bold text-primary-600">건강검진예약</span>
+            <Link to="/" className="flex items-center">
+              <img src="/headerlogo.png" alt="건강검진예약" className="h-28 w-auto" />
             </Link>
           </div>
 
