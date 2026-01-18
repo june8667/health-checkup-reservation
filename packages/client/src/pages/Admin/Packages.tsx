@@ -42,10 +42,9 @@ interface PackageFormData {
   description: string;
   category: 'basic' | 'standard' | 'premium' | 'specialized';
   items: { name: string; description?: string }[];
-  price: number;
-  discountPrice?: number;
+  price: string;
+  discountPrice: string;
   duration: number;
-  hospitalId: string;
   targetGender: 'male' | 'female' | 'all';
   targetAgeMin?: number;
   targetAgeMax?: number;
@@ -61,10 +60,9 @@ const initialFormData: PackageFormData = {
   description: '',
   category: 'basic',
   items: [{ name: '', description: '' }],
-  price: 0,
-  discountPrice: undefined,
+  price: '',
+  discountPrice: '',
   duration: 120,
-  hospitalId: '',
   targetGender: 'all',
   targetAgeMin: undefined,
   targetAgeMax: undefined,
@@ -144,10 +142,9 @@ export default function Packages() {
       description: pkg.description,
       category: pkg.category,
       items: pkg.items || [{ name: '', description: '' }],
-      price: pkg.price,
-      discountPrice: pkg.discountPrice,
+      price: pkg.price?.toString() || '',
+      discountPrice: pkg.discountPrice?.toString() || '',
       duration: pkg.duration,
-      hospitalId: pkg.hospitalId?._id || pkg.hospitalId || '',
       targetGender: pkg.targetGender,
       targetAgeMin: pkg.targetAgeMin,
       targetAgeMax: pkg.targetAgeMax,
@@ -169,15 +166,31 @@ export default function Packages() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submitData: PackageInput = {
-      ...formData,
+    const priceNum = parseInt(formData.price.replace(/,/g, '')) || 0;
+    const discountPriceNum = formData.discountPrice ? parseInt(formData.discountPrice.replace(/,/g, '')) : undefined;
+
+    const submitData: Partial<PackageInput> = {
+      name: formData.name,
+      description: formData.description,
+      category: formData.category,
       items: formData.items.filter((item) => item.name.trim() !== ''),
+      price: priceNum,
+      discountPrice: discountPriceNum,
+      duration: formData.duration,
+      targetGender: formData.targetGender,
+      targetAgeMin: formData.targetAgeMin,
+      targetAgeMax: formData.targetAgeMax,
+      availableDays: formData.availableDays,
+      maxReservationsPerSlot: formData.maxReservationsPerSlot,
+      isActive: formData.isActive,
+      displayOrder: formData.displayOrder,
+      tags: formData.tags,
     };
 
     if (editingPackage) {
       updateMutation.mutate({ id: editingPackage._id, data: submitData });
     } else {
-      createMutation.mutate(submitData);
+      createMutation.mutate(submitData as PackageInput);
     }
   };
 
@@ -562,12 +575,13 @@ export default function Packages() {
                     가격 (원) *
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     value={formData.price}
                     onChange={(e) =>
-                      setFormData({ ...formData, price: parseInt(e.target.value) || 0 })
+                      setFormData({ ...formData, price: e.target.value.replace(/[^0-9]/g, '') })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="예: 150000"
                     required
                   />
                 </div>
@@ -577,15 +591,13 @@ export default function Packages() {
                     할인가격 (원)
                   </label>
                   <input
-                    type="number"
-                    value={formData.discountPrice || ''}
+                    type="text"
+                    value={formData.discountPrice}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        discountPrice: e.target.value ? parseInt(e.target.value) : undefined,
-                      })
+                      setFormData({ ...formData, discountPrice: e.target.value.replace(/[^0-9]/g, '') })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="예: 120000"
                   />
                 </div>
               </div>
@@ -622,20 +634,6 @@ export default function Packages() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  병원 ID *
-                </label>
-                <input
-                  type="text"
-                  value={formData.hospitalId}
-                  onChange={(e) => setFormData({ ...formData, hospitalId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="병원 ObjectId를 입력하세요"
-                  required
-                />
               </div>
 
               <div>

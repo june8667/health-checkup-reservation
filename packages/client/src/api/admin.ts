@@ -147,7 +147,7 @@ export interface PackageInput {
   price: number;
   discountPrice?: number;
   duration: number;
-  hospitalId: string;
+  hospitalId?: string;
   targetGender: 'male' | 'female' | 'all';
   targetAgeMin?: number;
   targetAgeMax?: number;
