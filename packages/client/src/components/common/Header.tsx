@@ -26,7 +26,7 @@ export default function Header() {
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <img src="/headerlogo.png" alt="건강검진예약" className="h-28 w-auto" />
+              <img src="/headerlogo.png" alt="건강검진예약" className="h-[67px] md:h-28 w-auto" />
             </Link>
           </div>
 
