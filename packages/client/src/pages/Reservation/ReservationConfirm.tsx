@@ -11,7 +11,7 @@ import Button from '../../components/common/Button';
 export default function ReservationConfirm() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const { selectedPackage, selectedDate, selectedTime, patientInfo, memo, reset } =
+  const { selectedPackage, selectedDate, selectedTime, patientInfo, memo } =
     useReservationStore();
 
   useEffect(() => {
@@ -52,8 +52,8 @@ export default function ReservationConfirm() {
       });
 
       if (response.success && response.data) {
-        reset();
-        navigate(`/reservation/complete/${response.data._id}`);
+        // reset()은 완료 페이지에서 호출
+        navigate(`/reservation/complete/${response.data._id}`, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '예약에 실패했습니다.');

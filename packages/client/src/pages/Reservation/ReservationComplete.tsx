@@ -5,18 +5,25 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CheckCircle, Calendar, User, Package, MapPin, Phone } from 'lucide-react';
 import { getReservationById } from '../../api/reservations';
+import { useReservationStore } from '../../store/reservationStore';
 import { GENDER_LABELS } from '../../constants/labels';
 import Button from '../../components/common/Button';
 
 export default function ReservationComplete() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const resetReservation = useReservationStore((state) => state.reset);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['reservation', id],
     queryFn: () => getReservationById(id!),
     enabled: !!id,
   });
+
+  // 예약 스토어 초기화
+  useEffect(() => {
+    resetReservation();
+  }, [resetReservation]);
 
   useEffect(() => {
     if (error) {
