@@ -26,6 +26,7 @@ export default function Header() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
+              <img src="/logo.png" alt="로고" className="h-12 w-auto" />
               <span className="text-xl font-bold text-primary-600">건강검진예약</span>
             </Link>
           </div>
