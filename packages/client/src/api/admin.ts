@@ -237,3 +237,21 @@ export async function downloadDatabaseBackup() {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 }
+
+// 샘플 데이터 생성
+export async function generateSampleData() {
+  const response = await apiClient.post('/admin/database/sample-data');
+  return response.data;
+}
+
+// 가짜 회원 생성
+export async function generateFakeUsers(count: number = 1000) {
+  const response = await apiClient.post('/admin/database/fake-users', { count });
+  return response.data;
+}
+
+// 테스트 데이터 삭제
+export async function clearTestData(target: 'users' | 'reservations' | 'payments' | 'all') {
+  const response = await apiClient.post('/admin/database/clear', { target });
+  return response.data;
+}

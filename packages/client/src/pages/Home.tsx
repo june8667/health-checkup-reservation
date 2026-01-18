@@ -1,49 +1,8 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Shield, Clock, Award, UserCog, User } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import { Calendar, Shield, Clock, Award } from 'lucide-react';
 import Button from '../components/common/Button';
-import { testLoginAdmin, testLoginUser } from '../api/auth';
-import { useAuthStore } from '../store/authStore';
 
 export default function Home() {
-  const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const [isAdminLoading, setIsAdminLoading] = useState(false);
-  const [isUserLoading, setIsUserLoading] = useState(false);
-
-  const handleAdminLogin = async () => {
-    setIsAdminLoading(true);
-    try {
-      const result = await testLoginAdmin();
-      if (result.success && result.data) {
-        setAuth(result.data.user, result.data.accessToken);
-        toast.success('관리자로 로그인되었습니다.');
-        navigate('/admin');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
-    } finally {
-      setIsAdminLoading(false);
-    }
-  };
-
-  const handleUserLogin = async () => {
-    setIsUserLoading(true);
-    try {
-      const result = await testLoginUser();
-      if (result.success && result.data) {
-        setAuth(result.data.user, result.data.accessToken);
-        toast.success(result.message || `${result.data.user.name}(으)로 로그인되었습니다.`);
-        navigate('/mypage');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
-    } finally {
-      setIsUserLoading(false);
-    }
-  };
-
   const features = [
     {
       icon: Calendar,
@@ -90,42 +49,15 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/packages">
-                <Button size="lg" variant="secondary">
+                <button className="w-48 px-8 py-4 text-lg font-bold tracking-wide text-primary-700 bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-[0_4px_0_0_rgba(0,0,0,0.2),0_6px_12px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)] border border-white/50 hover:shadow-[0_2px_0_0_rgba(0,0,0,0.2),0_3px_6px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)] hover:translate-y-[2px] active:shadow-none active:translate-y-1 transition-all duration-150 drop-shadow-sm">
                   검진 패키지 보기
-                </Button>
+                </button>
               </Link>
               <Link to="/reservation">
-                <Button size="lg" variant="secondary" className="!bg-white !text-primary-600 hover:!bg-primary-50">
+                <button className="w-48 px-8 py-4 text-lg font-bold tracking-wide text-white bg-gradient-to-b from-primary-500 to-primary-700 rounded-xl shadow-[0_4px_0_0_rgba(0,80,120,0.5),0_6px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)] border border-primary-400/50 hover:shadow-[0_2px_0_0_rgba(0,80,120,0.5),0_3px_6px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)] hover:translate-y-[2px] active:shadow-none active:translate-y-1 transition-all duration-150 [text-shadow:_0_1px_2px_rgba(0,0,0,0.3)]">
                   지금 예약하기
-                </Button>
+                </button>
               </Link>
-            </div>
-
-            {/* 테스트용 버튼 */}
-            <div className="mt-8 pt-6 border-t border-primary-500/30">
-              <p className="text-sm text-primary-200 mb-3">테스트용 빠른 로그인</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="!border-yellow-400 !text-yellow-400 hover:!bg-yellow-400/10"
-                  onClick={handleAdminLogin}
-                  isLoading={isAdminLoading}
-                >
-                  <UserCog className="w-5 h-5 mr-2" />
-                  관리자로 입장하기
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="!border-green-400 !text-green-400 hover:!bg-green-400/10"
-                  onClick={handleUserLogin}
-                  isLoading={isUserLoading}
-                >
-                  <User className="w-5 h-5 mr-2" />
-                  회원으로 입장하기
-                </Button>
-              </div>
             </div>
           </div>
         </div>

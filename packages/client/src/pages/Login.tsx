@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { login } from '../api/auth';
+import { UserCog, User } from 'lucide-react';
+import { login, testLoginAdmin, testLoginUser } from '../api/auth';
 import { useAuthStore } from '../store/authStore';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -21,8 +22,42 @@ export default function Login() {
   const location = useLocation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
+  const [isUserLoading, setIsUserLoading] = useState(false);
 
   const from = location.state?.from?.pathname || '/';
+
+  const handleAdminLogin = async () => {
+    setIsAdminLoading(true);
+    try {
+      const result = await testLoginAdmin();
+      if (result.success && result.data) {
+        setAuth(result.data.user, result.data.accessToken);
+        toast.success('관리자로 로그인되었습니다.');
+        navigate('/admin');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsAdminLoading(false);
+    }
+  };
+
+  const handleUserLogin = async () => {
+    setIsUserLoading(true);
+    try {
+      const result = await testLoginUser();
+      if (result.success && result.data) {
+        setAuth(result.data.user, result.data.accessToken);
+        toast.success(result.message || `${result.data.user.name}(으)로 로그인되었습니다.`);
+        navigate('/mypage');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsUserLoading(false);
+    }
+  };
 
   const {
     register,
@@ -96,6 +131,33 @@ export default function Login() {
             >
               비밀번호를 잊으셨나요?
             </Link>
+          </div>
+
+          {/* 테스트용 빠른 로그인 */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-500 text-center mb-3">테스트용 빠른 로그인</p>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full !border-yellow-500 !text-yellow-600 hover:!bg-yellow-50"
+                onClick={handleAdminLogin}
+                isLoading={isAdminLoading}
+              >
+                <UserCog className="w-4 h-4 mr-2" />
+                관리자로 입장하기
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full !border-green-500 !text-green-600 hover:!bg-green-50"
+                onClick={handleUserLogin}
+                isLoading={isUserLoading}
+              >
+                <User className="w-4 h-4 mr-2" />
+                회원으로 입장하기
+              </Button>
+            </div>
           </div>
         </div>
       </div>

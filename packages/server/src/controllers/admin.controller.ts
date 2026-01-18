@@ -523,6 +523,154 @@ export async function deleteBlockedSlotsByDate(
   }
 }
 
+// 샘플 데이터 생성
+export async function generateSampleData(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // 샘플 패키지와 병원 데이터는 이미 seed에서 처리되므로
+    // 여기서는 샘플 예약 데이터를 생성합니다
+    const users = await User.find({ role: 'user' }).limit(10);
+    const packages = await Package.find({ isActive: true });
+
+    if (users.length === 0 || packages.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: '샘플 데이터 생성을 위한 기본 데이터가 없습니다.',
+      });
+      return;
+    }
+
+    const sampleReservations = [];
+    const now = new Date();
+
+    for (let i = 0; i < 20; i++) {
+      const user = users[Math.floor(Math.random() * users.length)];
+      const pkg = packages[Math.floor(Math.random() * packages.length)];
+      const daysOffset = Math.floor(Math.random() * 30) - 15;
+      const reservationDate = new Date(now);
+      reservationDate.setDate(reservationDate.getDate() + daysOffset);
+
+      const times = ['10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00'];
+      const statuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+
+      sampleReservations.push({
+        reservationNumber: `R${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+        userId: user._id,
+        packageId: pkg._id,
+        hospitalId: pkg.hospitalId,
+        reservationDate,
+        reservationTime: times[Math.floor(Math.random() * times.length)],
+        patientInfo: {
+          name: user.name,
+          phone: user.phone,
+          birthDate: user.birthDate,
+          gender: user.gender,
+        },
+        totalAmount: pkg.price,
+        discountAmount: pkg.discountPrice ? pkg.price - pkg.discountPrice : 0,
+        finalAmount: pkg.discountPrice || pkg.price,
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+      });
+    }
+
+    await Reservation.insertMany(sampleReservations);
+
+    res.json({
+      success: true,
+      message: `샘플 예약 데이터 ${sampleReservations.length}건이 생성되었습니다.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// 가짜 회원 생성
+export async function generateFakeUsers(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const count = parseInt(req.body.count) || 1000;
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
+    const koreanLastNames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임'];
+    const koreanFirstNames = ['민준', '서연', '예준', '서윤', '도윤', '지우', '시우', '하윤', '주원', '지호'];
+
+    const fakeUsers = [];
+    for (let i = 0; i < count; i++) {
+      const lastName = koreanLastNames[Math.floor(Math.random() * koreanLastNames.length)];
+      const firstName = koreanFirstNames[Math.floor(Math.random() * koreanFirstNames.length)];
+      const name = lastName + firstName;
+
+      const birthYear = 1950 + Math.floor(Math.random() * 50);
+      const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+      const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+
+      fakeUsers.push({
+        email: `fake${Date.now()}${i}@test.com`,
+        password: hashedPassword,
+        name,
+        phone: `010${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+        birthDate: new Date(`${birthYear}-${birthMonth}-${birthDay}`),
+        gender: Math.random() > 0.5 ? 'male' : 'female',
+        role: 'user',
+        isVerified: true,
+        marketingConsent: Math.random() > 0.5,
+      });
+    }
+
+    await User.insertMany(fakeUsers);
+
+    res.json({
+      success: true,
+      message: `가짜 회원 ${count}명이 생성되었습니다.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// 데이터 삭제 (테스트 데이터만)
+export async function clearTestData(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { target } = req.body;
+
+    let message = '';
+
+    if (target === 'users' || target === 'all') {
+      // fake 이메일을 가진 사용자만 삭제
+      const result = await User.deleteMany({ email: { $regex: /^fake.*@test\.com$/ } });
+      message += `가짜 회원 ${result.deletedCount}명 삭제. `;
+    }
+
+    if (target === 'reservations' || target === 'all') {
+      const result = await Reservation.deleteMany({});
+      message += `예약 ${result.deletedCount}건 삭제. `;
+    }
+
+    if (target === 'payments' || target === 'all') {
+      const result = await Payment.deleteMany({});
+      message += `결제 ${result.deletedCount}건 삭제. `;
+    }
+
+    res.json({
+      success: true,
+      message: message || '삭제된 데이터가 없습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // Database backup
 export async function backupDatabase(
   req: AuthRequest,

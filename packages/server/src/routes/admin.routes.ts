@@ -20,6 +20,9 @@ import {
   deleteBlockedSlot,
   deleteBlockedSlotsByDate,
   backupDatabase,
+  generateSampleData,
+  generateFakeUsers,
+  clearTestData,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -60,5 +63,8 @@ router.post('/blocked-slots/clear', deleteBlockedSlotsByDate);
 
 // Database management
 router.get('/database/backup', backupDatabase);
+router.post('/database/sample-data', generateSampleData);
+router.post('/database/fake-users', generateFakeUsers);
+router.post('/database/clear', clearTestData);
 
 export default router;
