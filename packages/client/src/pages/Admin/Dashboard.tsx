@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -21,15 +22,20 @@ function StatCard({
   icon: Icon,
   color,
   suffix = '',
+  onClick,
 }: {
   title: string;
   value: number | string;
   icon: React.ElementType;
   color: string;
   suffix?: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div
+      className={`bg-white rounded-lg shadow p-6 ${onClick ? 'cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-500">{title}</p>
@@ -47,6 +53,7 @@ function StatCard({
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ['adminDashboard'],
     queryFn: getDashboardStats,
@@ -80,6 +87,7 @@ export default function Dashboard() {
           icon={Users}
           color="bg-blue-500"
           suffix="명"
+          onClick={() => navigate('/admin/users')}
         />
         <StatCard
           title="총 예약수"
@@ -87,6 +95,7 @@ export default function Dashboard() {
           icon={CalendarCheck}
           color="bg-green-500"
           suffix="건"
+          onClick={() => navigate('/admin/reservations')}
         />
         <StatCard
           title="총 매출"
