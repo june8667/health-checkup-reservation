@@ -22,9 +22,9 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex flex-col md:flex-row md:justify-between md:h-[74px] md:items-center py-2 md:py-0">
           {/* 로고 */}
-          <div className="flex justify-center md:justify-start">
+          <div className="flex justify-center md:justify-start h-[58px] md:h-auto overflow-visible">
             <Link to="/" className="flex items-center">
-              <img src="/headerlogo.png" alt="건강검진예약" className="h-[58px] md:h-28 w-auto" />
+              <img src="/headerlogo.png" alt="건강검진예약" className="h-[70px] md:h-28 w-auto" />
             </Link>
           </div>
 
@@ -34,21 +34,21 @@ export default function Header() {
               <>
                 <Link
                   to="/reservation"
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   예약하기
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   to="/packages"
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   검진 패키지
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   to="/mypage"
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   마이페이지
                 </Link>
@@ -57,7 +57,7 @@ export default function Header() {
                     <span className="text-gray-300">|</span>
                     <Link
                       to="/admin"
-                      className="text-xs sm:text-sm md:text-base text-purple-600 hover:text-purple-800 font-medium transition-colors whitespace-nowrap"
+                      className="text-[14px] sm:text-base md:text-lg text-purple-600 hover:text-purple-800 font-medium transition-colors whitespace-nowrap"
                     >
                       관리자
                     </Link>
@@ -66,7 +66,7 @@ export default function Header() {
                 <span className="text-gray-300">|</span>
                 <button
                   onClick={handleLogout}
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   로그아웃
                 </button>
@@ -75,21 +75,21 @@ export default function Header() {
               <>
                 <Link
                   to="/packages"
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   검진 패키지
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   to="/login"
-                  className="text-xs sm:text-sm md:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
                   로그인
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
                   to="/register"
-                  className="text-xs sm:text-sm md:text-base text-primary-600 hover:text-primary-700 font-medium transition-colors whitespace-nowrap"
+                  className="text-[14px] sm:text-base md:text-lg text-primary-600 hover:text-primary-700 font-medium transition-colors whitespace-nowrap"
                 >
                   회원가입
                 </Link>
