@@ -17,6 +17,7 @@ export async function createReservation(
       reservationTime: req.body.reservationTime,
       patientInfo: req.body.patientInfo,
       memo: req.body.memo,
+      status: req.body.status,
     });
 
     res.status(201).json({

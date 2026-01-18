@@ -24,6 +24,14 @@ export default function ReservationConfirm() {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
 
+  // 생년월일 포맷 (YYYYMMDD -> YYYY-MM-DD)
+  const formatBirthDate = (birthDate: string) => {
+    if (birthDate.length === 8) {
+      return `${birthDate.slice(0, 4)}-${birthDate.slice(4, 6)}-${birthDate.slice(6, 8)}`;
+    }
+    return birthDate;
+  };
+
   const handleSubmit = async () => {
     if (!selectedPackage || !selectedDate || !selectedTime || !patientInfo) {
       return;
@@ -40,15 +48,16 @@ export default function ReservationConfirm() {
           birthDate: patientInfo.birthDate,
         },
         memo,
+        status: 'confirmed',
       });
 
       if (response.success && response.data) {
-        toast.success('예약이 생성되었습니다.');
+        toast.success('예약이 완료되었습니다.');
         reset();
-        navigate(`/payment/${response.data._id}`);
+        navigate('/mypage');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '예약 생성에 실패했습니다.');
+      toast.error(error.response?.data?.message || '예약에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +113,7 @@ export default function ReservationConfirm() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">생년월일</span>
-              <span className="font-medium">{patientInfo.birthDate}</span>
+              <span className="font-medium">{formatBirthDate(patientInfo.birthDate)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">성별</span>
@@ -155,7 +164,7 @@ export default function ReservationConfirm() {
             이전
           </Button>
           <Button onClick={handleSubmit} isLoading={isLoading} size="lg" className="w-full sm:w-auto">
-            결제하기
+            예약하기
           </Button>
         </div>
       </div>

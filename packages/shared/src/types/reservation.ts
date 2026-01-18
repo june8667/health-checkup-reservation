@@ -51,6 +51,7 @@ export interface ReservationCreateInput {
   patientInfo: PatientInfo;
   additionalOptions?: { optionId: string }[];
   memo?: string;
+  status?: 'pending' | 'confirmed';
 }
 
 export interface ReservationWithDetails extends Reservation {

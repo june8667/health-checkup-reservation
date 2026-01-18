@@ -13,7 +13,7 @@ import Input from '../../components/common/Input';
 const patientSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다.'),
   phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호 형식이 아닙니다.'),
-  birthDate: z.string().min(1, '생년월일을 입력해주세요.'),
+  birthDate: z.string().regex(/^\d{8}$/, '생년월일 8자리를 입력해주세요. (예: 19900101)'),
   gender: z.enum(['male', 'female'], { required_error: '성별을 선택해주세요.' }),
 });
 
@@ -57,13 +57,21 @@ export default function PatientInfo() {
     }
   }, [selectedPackage, selectedDate, selectedTime, navigate]);
 
+  // YYYY-MM-DD 또는 ISO 날짜를 YYYYMMDD로 변환
+  const formatBirthDate = (date: string | undefined): string => {
+    if (!date) return '';
+    // YYYY-MM-DD 또는 ISO 형식에서 숫자만 추출
+    const cleaned = date.split('T')[0].replace(/-/g, '');
+    return cleaned.length === 8 ? cleaned : '';
+  };
+
   // DB에서 조회한 회원정보로 폼 채우기
   useEffect(() => {
     if (!patientInfo && dbUser) {
       reset({
         name: dbUser.name || '',
         phone: dbUser.phone || '',
-        birthDate: dbUser.birthDate?.split('T')[0] || '',
+        birthDate: formatBirthDate(dbUser.birthDate),
         gender: dbUser.gender || undefined,
       });
     } else if (!patientInfo && user && !isAuthenticated) {
@@ -71,7 +79,7 @@ export default function PatientInfo() {
       reset({
         name: user.name || '',
         phone: user.phone || '',
-        birthDate: user.birthDate?.split('T')[0] || '',
+        birthDate: formatBirthDate(user.birthDate),
         gender: user.gender || undefined,
       });
     }
@@ -141,7 +149,9 @@ export default function PatientInfo() {
 
           <Input
             label="생년월일"
-            type="date"
+            type="text"
+            placeholder="19900101"
+            maxLength={8}
             error={errors.birthDate?.message}
             required
             {...register('birthDate')}

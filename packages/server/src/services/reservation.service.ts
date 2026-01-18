@@ -16,6 +16,7 @@ interface CreateReservationInput {
     gender: 'male' | 'female';
   };
   memo?: string;
+  status?: 'pending' | 'confirmed';
 }
 
 export class ReservationService {
@@ -56,7 +57,7 @@ export class ReservationService {
       totalAmount,
       discountAmount,
       finalAmount,
-      status: 'pending',
+      status: input.status || 'confirmed',
       memo: input.memo,
     });
 
