@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { format, addDays, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Lock, User, GripVertical, X, Phone, Mail, Calendar, Package, CreditCard, Move } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, User, GripVertical, X, Phone, Mail, Calendar, Package, CreditCard, Move, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   getBlockedSlots,
@@ -47,13 +47,12 @@ export default function Schedule() {
   const [draggedReservation, setDraggedReservation] = useState<any>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  // 터치 드래그 관련 상태
-  const [touchDragMode, setTouchDragMode] = useState(false);
-  const [touchDragPosition, setTouchDragPosition] = useState<{ x: number; y: number } | null>(null);
+  // 모바일 예약변경 모드 상태
+  const [moveMode, setMoveMode] = useState(false);
+  const [movingReservation, setMovingReservation] = useState<any>(null);
   const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
-  const cellMapRef = useRef<Map<string, DOMRect>>(new Map());
 
   // 예약 상세 모달
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
@@ -369,49 +368,24 @@ export default function Schedule() {
     return dropTarget === key;
   };
 
-  // 셀 위치 맵 업데이트
-  const updateCellMap = useCallback(() => {
-    if (!tableRef.current) return;
-    const cells = tableRef.current.querySelectorAll('[data-cell-key]');
-    cellMapRef.current.clear();
-    cells.forEach((cell) => {
-      const key = cell.getAttribute('data-cell-key');
-      if (key) {
-        cellMapRef.current.set(key, cell.getBoundingClientRect());
-      }
-    });
-  }, []);
-
-  // 터치 위치에서 셀 키 찾기
-  const findCellAtPosition = useCallback((x: number, y: number): string | null => {
-    for (const [key, rect] of cellMapRef.current.entries()) {
-      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        return key;
-      }
-    }
-    return null;
-  }, []);
-
-  // 터치 드래그 핸들러
+  // 모바일 예약변경 모드 핸들러
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>, reservation: any) => {
     const touch = e.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
 
-    // 1초 후 드래그 모드 활성화
+    // 1초 후 예약변경 모드 활성화
     touchTimerRef.current = setTimeout(() => {
       // 진동 피드백 (지원되는 경우)
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
 
-      setDraggedReservation(reservation);
-      setTouchDragMode(true);
-      setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
-      updateCellMap();
+      setMovingReservation(reservation);
+      setMoveMode(true);
 
-      toast.info('예약을 이동할 위치로 끌어다 놓으세요', { autoClose: 2000 });
+      toast.info('이동할 시간을 선택하세요', { autoClose: 3000 });
     }, 1000);
-  }, [updateCellMap]);
+  }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
     const touch = e.touches[0];
@@ -425,76 +399,55 @@ export default function Schedule() {
         touchTimerRef.current = null;
       }
     }
+  }, []);
 
-    // 드래그 모드일 때
-    if (touchDragMode && draggedReservation) {
-      e.preventDefault();
-      setTouchDragPosition({ x: touch.clientX, y: touch.clientY });
-
-      // 현재 터치 위치의 셀 찾기
-      const cellKey = findCellAtPosition(touch.clientX, touch.clientY);
-      setDropTarget(cellKey);
-    }
-  }, [touchDragMode, draggedReservation, findCellAtPosition]);
-
-  const handleTouchEnd = useCallback((_e: TouchEvent<HTMLDivElement>) => {
+  const handleTouchEnd = useCallback(() => {
     // 타이머 취소
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
-
-    // 드래그 모드가 아니면 클릭으로 처리
-    if (!touchDragMode) {
-      touchStartRef.current = null;
-      return;
-    }
-
-    // 드롭 처리
-    if (draggedReservation && dropTarget) {
-      const [dateStr, time] = dropTarget.split('-').reduce((acc, part, idx) => {
-        if (idx < 3) {
-          acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
-        } else {
-          acc[1] = acc[1] ? `${acc[1]}:${part}` : part;
-        }
-        return acc;
-      }, ['', ''] as [string, string]);
-
-      const currentDate = format(new Date(draggedReservation.reservationDate), 'yyyy-MM-dd');
-
-      if (currentDate !== dateStr || draggedReservation.reservationTime !== time) {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const targetDate = new Date(year, month - 1, day);
-
-        if (window.confirm(`예약을 ${format(targetDate, 'M월 d일')} ${time}으로 변경하시겠습니까?`)) {
-          rescheduleMutation.mutate({
-            id: draggedReservation._id,
-            date: dateStr,
-            time: time,
-          });
-        }
-      }
-    }
-
-    // 상태 초기화
-    setTouchDragMode(false);
-    setTouchDragPosition(null);
-    setDraggedReservation(null);
-    setDropTarget(null);
     touchStartRef.current = null;
-  }, [touchDragMode, draggedReservation, dropTarget, rescheduleMutation]);
+  }, []);
 
   const handleTouchCancel = useCallback(() => {
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
-    setTouchDragMode(false);
-    setTouchDragPosition(null);
-    setDraggedReservation(null);
-    setDropTarget(null);
     touchStartRef.current = null;
+  }, []);
+
+  // 예약변경 모드에서 슬롯 선택
+  const handleMoveToSlot = useCallback((date: Date, time: string) => {
+    if (!moveMode || !movingReservation) return;
+
+    const newDate = format(date, 'yyyy-MM-dd');
+    const currentDate = format(new Date(movingReservation.reservationDate), 'yyyy-MM-dd');
+
+    // 같은 슬롯이면 취소
+    if (currentDate === newDate && movingReservation.reservationTime === time) {
+      setMoveMode(false);
+      setMovingReservation(null);
+      return;
+    }
+
+    if (window.confirm(`예약을 ${format(date, 'M월 d일')} ${time}으로 변경하시겠습니까?`)) {
+      rescheduleMutation.mutate({
+        id: movingReservation._id,
+        date: newDate,
+        time: time,
+      });
+    }
+
+    setMoveMode(false);
+    setMovingReservation(null);
+  }, [moveMode, movingReservation, rescheduleMutation]);
+
+  // 예약변경 모드 취소
+  const cancelMoveMode = useCallback(() => {
+    setMoveMode(false);
+    setMovingReservation(null);
   }, []);
 
   const prevWeek = () => setCurrentWeekStart(addDays(currentWeekStart, -7));
@@ -648,8 +601,8 @@ export default function Schedule() {
                                     onTouchMove={isDraggable ? handleTouchMove : undefined}
                                     onTouchEnd={isDraggable ? handleTouchEnd : undefined}
                                     onTouchCancel={isDraggable ? handleTouchCancel : undefined}
-                                    onClick={() => !touchDragMode && openReservationModal(res)}
-                                    className={`w-full py-1 px-1 ${statusStyle.bg} ${statusStyle.text} rounded text-xs font-medium border ${statusStyle.border} hover:opacity-80 transition-opacity cursor-pointer ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''} ${touchDragMode && draggedReservation?._id === res._id ? 'opacity-50 ring-2 ring-primary-500' : ''}`}
+                                    onClick={() => !moveMode && openReservationModal(res)}
+                                    className={`w-full py-1 px-1 ${statusStyle.bg} ${statusStyle.text} rounded text-xs font-medium border ${statusStyle.border} hover:opacity-80 transition-opacity cursor-pointer ${isDraggable ? 'cursor-grab active:cursor-grabbing' : ''} ${moveMode && movingReservation?._id === res._id ? 'ring-2 ring-primary-500 animate-pulse' : ''}`}
                                     title="클릭하여 상세 보기 (길게 누르면 이동)"
                                   >
                                     <div className="flex items-center justify-center gap-1">
@@ -690,16 +643,24 @@ export default function Schedule() {
                               className={`w-full transition-all ${isDropTarget(day, time) ? 'ring-2 ring-green-400 bg-green-50 rounded' : ''}`}
                             >
                               <button
-                                onClick={() => !touchDragMode && toggleSlotSelection(day, time)}
+                                onClick={() => {
+                                  if (moveMode) {
+                                    handleMoveToSlot(day, time);
+                                  } else {
+                                    toggleSlotSelection(day, time);
+                                  }
+                                }}
                                 className={`w-full py-2 px-2 rounded text-xs font-medium transition-colors ${
                                   selected
                                     ? 'bg-blue-200 text-blue-800 ring-2 ring-blue-500 border border-blue-300'
                                     : isDropTarget(day, time)
                                     ? 'bg-green-100 text-green-700 border border-green-300'
+                                    : moveMode
+                                    ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 animate-pulse'
                                     : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
                                 }`}
                               >
-                                {isDropTarget(day, time) ? '여기에 놓기' : selected ? '선택됨' : '예약가능'}
+                                {isDropTarget(day, time) ? '여기에 놓기' : moveMode ? '여기로 이동' : selected ? '선택됨' : '예약가능'}
                               </button>
                             </div>
                           )}
@@ -754,7 +715,8 @@ export default function Schedule() {
           <summary className="font-medium mb-2 cursor-pointer">사용 방법 보기</summary>
           <ul className="list-disc list-inside space-y-1 mt-2">
             <li>예약 카드를 클릭하면 상세 정보를 확인할 수 있습니다.</li>
-            <li><strong>예약 카드를 1초간 길게 누르면</strong> 다른 시간으로 이동할 수 있습니다.</li>
+            <li><strong>예약 카드를 1초간 길게 누르면</strong> 예약변경 모드로 전환됩니다.</li>
+            <li>예약변경 모드에서 <strong>"여기로 이동" 버튼</strong>을 누르면 예약이 이동됩니다.</li>
             <li>차단할 시간을 클릭하여 선택 후 차단 버튼을 누르세요.</li>
             <li>차단된 시간을 클릭하면 해제됩니다.</li>
           </ul>
@@ -772,21 +734,30 @@ export default function Schedule() {
         </div>
       </div>
 
-      {/* 터치 드래그 인디케이터 */}
-      {touchDragMode && touchDragPosition && draggedReservation && (
-        <div
-          className="fixed pointer-events-none z-50 bg-primary-600 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-medium"
-          style={{
-            left: touchDragPosition.x - 60,
-            top: touchDragPosition.y - 50,
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <Move className="w-4 h-4" />
-            <span>{draggedReservation.patientInfo?.name || '예약자'}</span>
-          </div>
-          <div className="text-xs opacity-75 mt-1">
-            {dropTarget ? '손을 떼면 이동' : '이동할 위치로'}
+      {/* 예약변경 모드 배너 */}
+      {moveMode && movingReservation && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 bg-primary-600 text-white px-4 py-3 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Move className="w-5 h-5 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-medium truncate">
+                  {movingReservation.patientInfo?.name || '예약자'} 예약 이동
+                </div>
+                <div className="text-xs opacity-75 flex items-center gap-1">
+                  <span>{format(new Date(movingReservation.reservationDate), 'M/d')} {movingReservation.reservationTime}</span>
+                  <ArrowRight className="w-3 h-3" />
+                  <span>이동할 시간 선택</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={cancelMoveMode}
+              className="flex-shrink-0 p-1.5 hover:bg-white/20 rounded-full transition-colors"
+              title="취소"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
       )}
