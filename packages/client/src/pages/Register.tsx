@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
-import { register as registerApi, login, sendPhoneCode, verifyPhone, resetAllData, seedSampleData, createFakeUsers } from '../api/auth';
+import { register as registerApi, login, sendPhoneCode, verifyPhone } from '../api/auth';
 import { useAuthStore } from '../store/authStore';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -34,7 +34,6 @@ export default function Register() {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // 테스트용 관리자 권한
-  const [isCreatingFakeUsers, setIsCreatingFakeUsers] = useState(false);
 
   const {
     register,
@@ -265,7 +264,7 @@ export default function Register() {
             </div>
 
             {/* 테스트용 옵션 */}
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3">
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -275,64 +274,6 @@ export default function Register() {
                 />
                 <span className="text-sm text-yellow-800 font-medium">관리자 권한으로 가입 (테스트용)</span>
               </label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-blue-600 border-blue-300 hover:bg-blue-50"
-                  onClick={async () => {
-                    try {
-                      await seedSampleData();
-                      toast.success('샘플 데이터(병원, 패키지)가 생성되었습니다.');
-                    } catch (error) {
-                      toast.error('샘플 데이터 생성에 실패했습니다.');
-                    }
-                  }}
-                >
-                  샘플 데이터 생성
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-                  onClick={async () => {
-                    if (window.confirm('모든 회원, 예약, 결제 데이터가 삭제됩니다. 계속하시겠습니까?')) {
-                      try {
-                        await resetAllData();
-                        toast.success('모든 데이터가 삭제되었습니다.');
-                      } catch (error) {
-                        toast.error('데이터 삭제에 실패했습니다.');
-                      }
-                    }
-                  }}
-                >
-                  데이터 삭제
-                </Button>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full text-purple-600 border-purple-300 hover:bg-purple-50"
-                isLoading={isCreatingFakeUsers}
-                onClick={async () => {
-                  if (window.confirm('가짜 회원 1000명을 생성합니다. 계속하시겠습니까?')) {
-                    setIsCreatingFakeUsers(true);
-                    try {
-                      const result = await createFakeUsers(1000);
-                      toast.success(result.message || '가짜 회원 1000명이 생성되었습니다.');
-                    } catch (error) {
-                      toast.error('가짜 회원 생성에 실패했습니다.');
-                    } finally {
-                      setIsCreatingFakeUsers(false);
-                    }
-                  }
-                }}
-              >
-                가짜 회원 1000명 생성
-              </Button>
             </div>
 
             <Button
