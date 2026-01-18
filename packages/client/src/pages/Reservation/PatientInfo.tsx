@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useReservationStore } from '../../store/reservationStore';
 import { useAuthStore } from '../../store/authStore';
+import { getMe } from '../../api/auth';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 
@@ -20,8 +22,19 @@ type PatientForm = z.infer<typeof patientSchema>;
 export default function PatientInfo() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { selectedPackage, selectedDate, selectedTime, patientInfo, setPatientInfo, memo, setMemo } =
     useReservationStore();
+
+  // 로그인된 경우 DB에서 최신 회원정보 조회
+  const { data: meData, isLoading: isMeLoading } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5분간 캐시
+  });
+
+  const dbUser = meData?.data;
 
   const {
     register,
@@ -31,10 +44,10 @@ export default function PatientInfo() {
   } = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
     defaultValues: patientInfo || {
-      name: user?.name || '',
-      phone: user?.phone || '',
-      birthDate: user?.birthDate?.split('T')[0] || '',
-      gender: user?.gender || undefined,
+      name: '',
+      phone: '',
+      birthDate: '',
+      gender: undefined,
     },
   });
 
@@ -44,16 +57,25 @@ export default function PatientInfo() {
     }
   }, [selectedPackage, selectedDate, selectedTime, navigate]);
 
+  // DB에서 조회한 회원정보로 폼 채우기
   useEffect(() => {
-    if (user && !patientInfo) {
+    if (!patientInfo && dbUser) {
       reset({
-        name: user.name,
-        phone: user.phone,
+        name: dbUser.name || '',
+        phone: dbUser.phone || '',
+        birthDate: dbUser.birthDate?.split('T')[0] || '',
+        gender: dbUser.gender || undefined,
+      });
+    } else if (!patientInfo && user && !isAuthenticated) {
+      // 로그인 안 된 경우 기존 store의 user 정보 사용 (fallback)
+      reset({
+        name: user.name || '',
+        phone: user.phone || '',
         birthDate: user.birthDate?.split('T')[0] || '',
-        gender: user.gender,
+        gender: user.gender || undefined,
       });
     }
-  }, [user, patientInfo, reset]);
+  }, [dbUser, user, patientInfo, isAuthenticated, reset]);
 
   const onSubmit = (data: PatientForm) => {
     setPatientInfo(data);
@@ -68,9 +90,36 @@ export default function PatientInfo() {
     return null;
   }
 
+  // 로그인된 경우 회원정보 로딩 중
+  if (isAuthenticated && isMeLoading) {
+    return (
+      <div className="max-w-xl mx-auto">
+        <div className="card p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <p className="text-center text-gray-500 mt-4">회원정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <p className="text-gray-600 mb-6">수검자 정보를 입력해주세요.</p>
+
+      {isAuthenticated && dbUser && (
+        <div className="max-w-xl mx-auto mb-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+            회원정보가 자동으로 입력되었습니다. 수검자가 다른 경우 수정해주세요.
+          </div>
+        </div>
+      )}
 
       <div className="max-w-xl mx-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-5">
