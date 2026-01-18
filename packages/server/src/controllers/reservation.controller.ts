@@ -125,3 +125,26 @@ export async function cancelReservation(
     next(error);
   }
 }
+
+export async function updateNotes(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { specialNotes } = req.body;
+    const reservation = await reservationService.updateNotes(
+      req.params.id,
+      req.user!.userId,
+      specialNotes
+    );
+
+    res.json({
+      success: true,
+      message: '특이사항이 저장되었습니다.',
+      data: reservation,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

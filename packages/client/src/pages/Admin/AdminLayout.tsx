@@ -58,12 +58,12 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 w-[30vw] lg:w-64 bg-gray-900/70 backdrop-blur-sm lg:bg-gray-900 lg:backdrop-blur-none text-white z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-6 flex items-center justify-between">
-          <div>
+        <div className="p-3 lg:p-6 flex items-center justify-between">
+          <div className="hidden lg:block">
             <h1 className="text-xl font-bold">관리자 페이지</h1>
             <p className="text-sm text-gray-400 mt-1">{user?.name}</p>
           </div>
@@ -75,7 +75,7 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-2 lg:mt-6">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -83,27 +83,27 @@ export default function AdminLayout() {
               end={item.end}
               onClick={closeSidebar}
               className={({ isActive }) =>
-                `flex items-center px-6 py-3 text-sm font-medium transition-colors ${
+                `flex items-center px-3 lg:px-6 py-3 text-xs lg:text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`
               }
             >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.label}
+              <item.icon className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 flex-shrink-0" />
+              <span className="truncate">{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-6">
           <NavLink
             to="/"
             onClick={closeSidebar}
-            className="flex items-center text-sm text-gray-400 hover:text-white transition-colors"
+            className="flex items-center text-xs lg:text-sm text-gray-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            사이트로 돌아가기
+            <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="truncate">돌아가기</span>
           </NavLink>
         </div>
       </aside>

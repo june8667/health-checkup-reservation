@@ -31,6 +31,7 @@ export interface IReservation extends Document {
   status: ReservationStatus;
   paymentId?: Types.ObjectId;
   memo?: string;
+  specialNotes?: string;
   adminMemo?: string;
   cancelledAt?: Date;
   cancelReason?: string;
@@ -86,6 +87,7 @@ const reservationSchema = new Schema<IReservation>(
     },
     paymentId: { type: Schema.Types.ObjectId, ref: 'Payment' },
     memo: String,
+    specialNotes: String,
     adminMemo: String,
     cancelledAt: Date,
     cancelReason: String,

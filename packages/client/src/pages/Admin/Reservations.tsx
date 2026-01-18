@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'react-toastify';
-import { Search, Filter, X, Calendar, User, Phone, Mail, Package, CreditCard } from 'lucide-react';
+import { Search, Filter, Calendar } from 'lucide-react';
 import { getAdminReservations, updateReservationStatus, deleteReservation } from '../../api/admin';
 import Button from '../../components/common/Button';
+import ReservationDetailModal from '../../components/ReservationDetailModal';
 
 const STATUS_OPTIONS = [
   { value: '', label: '전체' },
@@ -28,8 +29,6 @@ export default function Reservations() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
-  const [newStatus, setNewStatus] = useState('');
-  const [memo, setMemo] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['adminReservations', page, search, status],
@@ -37,15 +36,13 @@ export default function Reservations() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status, memo }: { id: string; status: string; memo?: string }) =>
-      updateReservationStatus(id, status, memo),
+    mutationFn: ({ id, status, adminMemo }: { id: string; status: string; adminMemo?: string }) =>
+      updateReservationStatus(id, status, adminMemo),
     onSuccess: () => {
       toast.success('예약 상태가 업데이트되었습니다.');
       queryClient.invalidateQueries({ queryKey: ['adminReservations'] });
       queryClient.invalidateQueries({ queryKey: ['scheduleReservations'] });
       setSelectedReservation(null);
-      setNewStatus('');
-      setMemo('');
     },
     onError: () => {
       toast.error('상태 업데이트에 실패했습니다.');
@@ -65,47 +62,23 @@ export default function Reservations() {
     },
   });
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { text: 'text-yellow-800', label: '결제대기' };
-      case 'confirmed':
-        return { text: 'text-green-800', label: '예약확정' };
-      case 'completed':
-        return { text: 'text-blue-800', label: '검진완료' };
-      case 'cancelled':
-        return { text: 'text-red-800', label: '취소' };
-      case 'no_show':
-        return { text: 'text-orange-800', label: '노쇼' };
-      default:
-        return { text: 'text-gray-800', label: status };
-    }
-  };
-
-  const openReservationModal = (reservation: any) => {
-    setSelectedReservation(reservation);
-    setNewStatus(reservation.status);
-    setMemo(reservation.adminMemo || '');
-  };
-
-  const closeReservationModal = () => {
-    setSelectedReservation(null);
-    setNewStatus('');
-    setMemo('');
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
   };
 
-  const handleUpdateStatus = () => {
-    if (!selectedReservation || !newStatus) return;
-    updateMutation.mutate({
-      id: selectedReservation._id,
-      status: newStatus,
-      memo,
-    });
+  const handleUpdate = (id: string, data: { status?: string; adminMemo?: string }) => {
+    if (data.status) {
+      updateMutation.mutate({
+        id,
+        status: data.status,
+        adminMemo: data.adminMemo,
+      });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   const reservations = data?.data?.items || [];
@@ -172,7 +145,7 @@ export default function Reservations() {
           reservations.map((reservation: any) => (
             <div
               key={reservation._id}
-              onClick={() => openReservationModal(reservation)}
+              onClick={() => setSelectedReservation(reservation)}
               className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
@@ -253,7 +226,7 @@ export default function Reservations() {
                 reservations.map((reservation: any) => (
                   <tr
                     key={reservation._id}
-                    onClick={() => openReservationModal(reservation)}
+                    onClick={() => setSelectedReservation(reservation)}
                     className="hover:bg-gray-50 cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -327,169 +300,14 @@ export default function Reservations() {
 
       {/* 예약 상세 모달 */}
       {selectedReservation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
-              <h3 className="text-lg font-semibold">예약 상세 정보</h3>
-              <button
-                onClick={closeReservationModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-4">
-              {/* 예약 정보 */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  예약 정보
-                </h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-gray-500">예약번호</span>
-                    <p className="font-medium">{selectedReservation.reservationNumber}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">예약일시</span>
-                    <p className="font-medium">
-                      {format(new Date(selectedReservation.reservationDate), 'yyyy-MM-dd')} {selectedReservation.reservationTime}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">현재 상태</span>
-                    <p className={`font-medium ${getStatusStyle(selectedReservation.status).text}`}>
-                      {getStatusStyle(selectedReservation.status).label}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">예약일</span>
-                    <p className="font-medium">
-                      {format(new Date(selectedReservation.createdAt), 'yyyy-MM-dd HH:mm')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 고객 정보 */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  고객 정보
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">이름</span>
-                    <span className="font-medium">{selectedReservation.patientInfo?.name || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">연락처</span>
-                    <span className="font-medium">{selectedReservation.patientInfo?.phone || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">이메일</span>
-                    <span className="font-medium">{selectedReservation.userId?.email || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">생년월일</span>
-                    <span className="font-medium">{selectedReservation.patientInfo?.birthDate || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">성별</span>
-                    <span className="font-medium">
-                      {selectedReservation.patientInfo?.gender === 'male' ? '남성' :
-                       selectedReservation.patientInfo?.gender === 'female' ? '여성' : '-'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 패키지 및 결제 정보 */}
-              <div className="bg-green-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  패키지 및 결제
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">패키지</span>
-                    <span className="font-medium">{selectedReservation.packageId?.name || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500 w-16">결제금액</span>
-                    <span className="font-medium">{formatPrice(selectedReservation.finalAmount || 0)}원</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 상태 변경 */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">상태 변경</h4>
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  {STATUS_OPTIONS.filter((o) => o.value).map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 관리자 메모 */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">관리자 메모</h4>
-                <textarea
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="메모를 입력하세요"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between gap-2 p-4 border-t sticky bottom-0 bg-white">
-              {selectedReservation.status === 'cancelled' && (
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    if (window.confirm('취소된 예약을 삭제하시겠습니까?')) {
-                      deleteMutation.mutate(selectedReservation._id);
-                    }
-                  }}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  예약 삭제
-                </Button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  variant="secondary"
-                  onClick={closeReservationModal}
-                >
-                  닫기
-                </Button>
-                <Button
-                  onClick={handleUpdateStatus}
-                  isLoading={updateMutation.isPending}
-                >
-                  저장
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReservationDetailModal
+          reservation={selectedReservation}
+          isAdmin={true}
+          onClose={() => setSelectedReservation(null)}
+          onDelete={handleDelete}
+          onUpdate={handleUpdate}
+          isUpdating={updateMutation.isPending}
+        />
       )}
     </div>
   );

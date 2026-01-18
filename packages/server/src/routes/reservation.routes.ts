@@ -11,5 +11,6 @@ router.get('/my', reservationController.getMyReservations);
 router.get('/number/:reservationNumber', reservationController.getReservationByNumber);
 router.get('/:id', reservationController.getReservationById);
 router.post('/:id/cancel', reservationController.cancelReservation);
+router.patch('/:id/notes', reservationController.updateNotes);
 
 export default router;

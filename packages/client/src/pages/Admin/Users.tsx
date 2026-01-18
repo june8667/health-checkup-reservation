@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Search, Filter } from 'lucide-react';
-import { getAdminUsers } from '../../api/admin';
+import { toast } from 'react-toastify';
+import { getAdminUsers, updateAdminUser, deleteAdminUser } from '../../api/admin';
 import Button from '../../components/common/Button';
+import UserDetailModal from '../../components/UserDetailModal';
 
 const ROLE_OPTIONS = [
   { value: '', label: '전체' },
@@ -13,18 +15,52 @@ const ROLE_OPTIONS = [
 ];
 
 export default function Users() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['adminUsers', page, search, role],
     queryFn: () => getAdminUsers({ page, limit: 20, search, role }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateAdminUser(id, data),
+    onSuccess: () => {
+      toast.success('회원 정보가 수정되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setSelectedUser(null);
+    },
+    onError: () => {
+      toast.error('수정에 실패했습니다.');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAdminUser,
+    onSuccess: () => {
+      toast.success('회원이 삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setSelectedUser(null);
+    },
+    onError: () => {
+      toast.error('삭제에 실패했습니다.');
+    },
+  });
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
+  };
+
+  const handleUpdate = (id: string, data: any) => {
+    updateMutation.mutate({ id, data });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   const users = data?.data?.items || [];
@@ -83,7 +119,11 @@ export default function Users() {
           </div>
         ) : (
           users.map((user: any) => (
-            <div key={user._id} className="bg-white rounded-lg shadow p-4">
+            <div
+              key={user._id}
+              onClick={() => setSelectedUser(user)}
+              className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition-shadow"
+            >
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <div className="font-medium text-gray-900">{user.name}</div>
@@ -158,7 +198,11 @@ export default function Users() {
                 </tr>
               ) : (
                 users.map((user: any) => (
-                  <tr key={user._id} className="hover:bg-gray-50">
+                  <tr
+                    key={user._id}
+                    onClick={() => setSelectedUser(user)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
                       <div className="text-sm text-gray-500">{user.email}</div>
@@ -218,6 +262,17 @@ export default function Users() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* 회원 상세 모달 */}
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          isUpdating={updateMutation.isPending}
+        />
       )}
     </div>
   );

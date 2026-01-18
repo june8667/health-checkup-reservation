@@ -33,3 +33,8 @@ export async function cancelReservation(id: string, reason?: string): Promise<Ap
   const response = await apiClient.post(`/reservations/${id}/cancel`, { reason });
   return response.data;
 }
+
+export async function updateReservationNotes(id: string, specialNotes: string): Promise<ApiResponse<Reservation>> {
+  const response = await apiClient.patch(`/reservations/${id}/notes`, { specialNotes });
+  return response.data;
+}

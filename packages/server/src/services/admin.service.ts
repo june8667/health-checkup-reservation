@@ -301,6 +301,30 @@ export class AdminService {
     return { users, total };
   }
 
+  async updateUser(
+    userId: string,
+    data: {
+      name?: string;
+      phone?: string;
+      birthDate?: Date;
+      gender?: 'male' | 'female';
+      role?: 'user' | 'admin';
+      isVerified?: boolean;
+      marketingConsent?: boolean;
+    }
+  ): Promise<any> {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: data },
+      { new: true }
+    ).select('-password');
+    return user;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await User.findByIdAndDelete(userId);
+  }
+
   // 패키지 관리
   async getAllPackages(
     page: number = 1,

@@ -207,6 +207,62 @@ export async function getAllUsers(
   }
 }
 
+// 사용자 관리
+export async function updateUser(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { name, phone, birthDate, gender, role, isVerified, marketingConsent } = req.body;
+
+    const user = await adminService.updateUser(id, {
+      name,
+      phone,
+      birthDate: birthDate ? new Date(birthDate) : undefined,
+      gender,
+      role,
+      isVerified,
+      marketingConsent,
+    });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: '회원을 찾을 수 없습니다.',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: '회원 정보가 수정되었습니다.',
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteUser(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+    await adminService.deleteUser(id);
+
+    res.json({
+      success: true,
+      message: '회원이 삭제되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 패키지 관리
 export async function getAllPackages(
   req: AuthRequest,

@@ -99,6 +99,26 @@ export async function getAdminUsers(params: {
   return data;
 }
 
+export interface UserUpdateInput {
+  name?: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: 'male' | 'female';
+  role?: 'user' | 'admin';
+  isVerified?: boolean;
+  marketingConsent?: boolean;
+}
+
+export async function updateAdminUser(id: string, data: UserUpdateInput) {
+  const response = await apiClient.put(`/admin/users/${id}`, data);
+  return response.data;
+}
+
+export async function deleteAdminUser(id: string) {
+  const response = await apiClient.delete(`/admin/users/${id}`);
+  return response.data;
+}
+
 // 패키지 관리 API
 export async function getAdminPackages(params: {
   page?: number;

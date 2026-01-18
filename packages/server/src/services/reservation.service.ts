@@ -164,6 +164,23 @@ export class ReservationService {
     return { reservation, refundAmount };
   }
 
+  async updateNotes(
+    id: string,
+    userId: string,
+    specialNotes: string
+  ): Promise<IReservation> {
+    const reservation = await Reservation.findOne({ _id: id, userId });
+
+    if (!reservation) {
+      throw new AppError('예약을 찾을 수 없습니다.', 404);
+    }
+
+    reservation.specialNotes = specialNotes;
+    await reservation.save();
+
+    return reservation;
+  }
+
   async updateStatus(
     id: string,
     status: IReservation['status'],

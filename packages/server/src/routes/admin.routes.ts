@@ -8,6 +8,8 @@ import {
   deleteReservation,
   getAllPayments,
   getAllUsers,
+  updateUser,
+  deleteUser,
   getAllPackages,
   getPackageById,
   createPackage,
@@ -40,6 +42,8 @@ router.get('/payments', getAllPayments);
 
 // Users management
 router.get('/users', getAllUsers);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
 
 // Packages management
 router.get('/packages', getAllPackages);
