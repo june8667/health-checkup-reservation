@@ -11,7 +11,7 @@ export interface IReservation extends Document {
   reservationNumber: string;
   userId: Types.ObjectId;
   packageId: Types.ObjectId;
-  hospitalId: Types.ObjectId;
+  hospitalId?: Types.ObjectId;
   reservationDate: Date;
   reservationTime: string;
   patientInfo: {
@@ -60,7 +60,6 @@ const reservationSchema = new Schema<IReservation>(
     hospitalId: {
       type: Schema.Types.ObjectId,
       ref: 'Hospital',
-      required: true,
     },
     reservationDate: { type: Date, required: true },
     reservationTime: { type: String, required: true },

@@ -32,6 +32,14 @@ export default function ReservationConfirm() {
     return birthDate;
   };
 
+  // 생년월일을 ISO 형식으로 변환 (19900101 -> 1990-01-01)
+  const convertBirthDateToISO = (birthDate: string): string => {
+    if (birthDate.length === 8 && !birthDate.includes('-')) {
+      return `${birthDate.slice(0, 4)}-${birthDate.slice(4, 6)}-${birthDate.slice(6, 8)}`;
+    }
+    return birthDate;
+  };
+
   const handleSubmit = async () => {
     if (!selectedPackage || !selectedDate || !selectedTime || !patientInfo) {
       return;
@@ -45,7 +53,7 @@ export default function ReservationConfirm() {
         reservationTime: selectedTime,
         patientInfo: {
           ...patientInfo,
-          birthDate: patientInfo.birthDate,
+          birthDate: convertBirthDateToISO(patientInfo.birthDate),
         },
         memo,
         status: 'confirmed',
