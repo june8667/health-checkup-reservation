@@ -24,7 +24,7 @@ export default function Header() {
           {/* 로고 */}
           <div className="flex justify-center md:justify-start h-[58px] md:h-auto overflow-visible">
             <Link to="/" className="flex items-center">
-              <img src="/headerlogo.png" alt="건강검진예약" className="h-[70px] md:h-28 w-auto" />
+              <img src="/headerlogo.png" alt="건강검진예약" className="h-[77px] md:h-28 w-auto" />
             </Link>
           </div>
 
