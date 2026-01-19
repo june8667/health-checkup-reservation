@@ -20,9 +20,14 @@ import {
   deleteBlockedSlot,
   deleteBlockedSlotsByDate,
   backupDatabase,
+  restoreDatabase,
   generateSampleData,
   generateFakeUsers,
   clearTestData,
+  getAllExaminationItems,
+  createExaminationItem,
+  updateExaminationItem,
+  deleteExaminationItem,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -55,6 +60,12 @@ router.post('/packages', createPackage);
 router.put('/packages/:id', updatePackage);
 router.delete('/packages/:id', deletePackage);
 
+// Examination items management (검진항목 관리)
+router.get('/examination-items', getAllExaminationItems);
+router.post('/examination-items', createExaminationItem);
+router.put('/examination-items/:id', updateExaminationItem);
+router.delete('/examination-items/:id', deleteExaminationItem);
+
 // Blocked slots management (시간 차단 관리)
 router.get('/blocked-slots', getBlockedSlots);
 router.post('/blocked-slots', createBlockedSlot);
@@ -63,6 +74,7 @@ router.post('/blocked-slots/clear', deleteBlockedSlotsByDate);
 
 // Database management
 router.get('/database/backup', backupDatabase);
+router.post('/database/restore', restoreDatabase);
 router.post('/database/sample-data', generateSampleData);
 router.post('/database/fake-users', generateFakeUsers);
 router.post('/database/clear', clearTestData);

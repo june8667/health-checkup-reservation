@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, Check, Info, X } from 'lucide-react';
@@ -9,8 +9,9 @@ import Button from '../../components/common/Button';
 
 export default function SelectPackage() {
   const navigate = useNavigate();
-  const { selectedPackage, setSelectedPackage } = useReservationStore();
+  const { selectedPackage, setSelectedPackage, selectedItems, setSelectedItems } = useReservationStore();
   const [detailPackage, setDetailPackage] = useState<any>(null);
+  const [tempSelectedItems, setTempSelectedItems] = useState<{ [key: string]: boolean }>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['packages', 'all'],
@@ -23,12 +24,53 @@ export default function SelectPackage() {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
 
+  // 상세보기 모달이 열릴 때 tempSelectedItems 초기화
+  useEffect(() => {
+    if (detailPackage && detailPackage.category === 'custom') {
+      const initial: { [key: string]: boolean } = {};
+      detailPackage.items?.forEach((item: any) => {
+        // 이미 선택된 항목이 있으면 그 상태를 유지
+        const existingItem = selectedItems.find((si) => si.name === item.name);
+        initial[item.name] = existingItem?.selected || false;
+      });
+      setTempSelectedItems(initial);
+    }
+  }, [detailPackage]);
+
+  const handleTempItemToggle = (itemName: string) => {
+    setTempSelectedItems((prev) => ({
+      ...prev,
+      [itemName]: !prev[itemName],
+    }));
+  };
+
+  const getTempSelectedTotal = () => {
+    if (!detailPackage?.items) return 0;
+    return detailPackage.items
+      .filter((item: any) => tempSelectedItems[item.name])
+      .reduce((sum: number, item: any) => sum + (item.price || 0), 0);
+  };
+
+  const hasAnyTempSelection = () => {
+    return Object.values(tempSelectedItems).some((v) => v);
+  };
+
   const handleSelect = (pkg: any) => {
-    setSelectedPackage(pkg);
+    // 같은 패키지를 다시 클릭하면 선택 해제
+    if (selectedPackage?._id === pkg._id) {
+      setSelectedPackage(null);
+    } else {
+      setSelectedPackage(pkg);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedPackage(null);
   };
 
   const handleNext = () => {
     if (selectedPackage) {
+      window.scrollTo(0, 0);
       navigate('/reservation/select-date');
     }
   };
@@ -48,10 +90,10 @@ export default function SelectPackage() {
   }
 
   return (
-    <div>
+    <div onClick={handleClearSelection}>
       <p className="text-gray-600 mb-6">원하시는 검진 패키지를 선택해주세요.</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8" onClick={(e) => e.stopPropagation()}>
         {packages.map((pkg) => (
           <button
             key={pkg._id}
@@ -103,7 +145,7 @@ export default function SelectPackage() {
         ))}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
         <Button onClick={handleNext} disabled={!selectedPackage} size="lg">
           다음 단계
         </Button>
@@ -159,20 +201,80 @@ export default function SelectPackage() {
               {/* 검진 항목 */}
               {detailPackage.items && detailPackage.items.length > 0 && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">검진 항목</h4>
-                  <ul className="space-y-2">
-                    {detailPackage.items.map((item: any, index: number) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary-500 mt-0.5">•</span>
-                        <div>
-                          <span className="font-medium text-gray-900">{item.name}</span>
-                          {item.description && (
-                            <p className="text-gray-500 text-xs mt-0.5">{item.description}</p>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    검진 항목
+                    {detailPackage.category === 'custom' && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        (원하는 항목을 선택하세요)
+                      </span>
+                    )}
+                  </h4>
+                  {detailPackage.category === 'custom' ? (
+                    <ul className="space-y-2">
+                      {detailPackage.items.map((item: any, index: number) => (
+                        <li
+                          key={index}
+                          onClick={() => handleTempItemToggle(item.name)}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                            tempSelectedItems[item.name]
+                              ? 'border-primary-500 bg-primary-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                              tempSelectedItems[item.name]
+                                ? 'border-primary-600 bg-primary-600'
+                                : 'border-gray-300'
+                            }`}
+                          >
+                            {tempSelectedItems[item.name] && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-gray-900">{item.name}</span>
+                              {item.price && (
+                                <span className="text-primary-600 font-medium">
+                                  {formatPrice(item.price)}원
+                                </span>
+                              )}
+                            </div>
+                            {item.description && (
+                              <p className="text-gray-500 text-xs mt-0.5">{item.description}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ul className="space-y-2">
+                      {detailPackage.items.map((item: any, index: number) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <span className="text-primary-500 mt-0.5">•</span>
+                          <div>
+                            <span className="font-medium text-gray-900">{item.name}</span>
+                            {item.description && (
+                              <p className="text-gray-500 text-xs mt-0.5">{item.description}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {/* 선택 건강검진 총액 표시 */}
+              {detailPackage.category === 'custom' && hasAnyTempSelection() && (
+                <div className="bg-primary-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">선택 항목 총액</span>
+                    <span className="text-xl font-bold text-primary-600">
+                      {formatPrice(getTempSelectedTotal())}원
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -185,15 +287,36 @@ export default function SelectPackage() {
               >
                 닫기
               </Button>
-              <Button
-                onClick={() => {
-                  setSelectedPackage(detailPackage);
-                  setDetailPackage(null);
-                }}
-                className="flex-1"
-              >
-                이 패키지 선택
-              </Button>
+              {detailPackage.category === 'custom' ? (
+                <Button
+                  onClick={() => {
+                    // 선택한 항목들을 저장
+                    const items = detailPackage.items.map((item: any) => ({
+                      ...item,
+                      selected: tempSelectedItems[item.name] || false,
+                    }));
+                    setSelectedItems(items);
+                    setSelectedPackage(detailPackage);
+                    setDetailPackage(null);
+                  }}
+                  disabled={!hasAnyTempSelection()}
+                  className="flex-1"
+                >
+                  {hasAnyTempSelection()
+                    ? `${formatPrice(getTempSelectedTotal())}원 선택`
+                    : '항목을 선택하세요'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setSelectedPackage(detailPackage);
+                    setDetailPackage(null);
+                  }}
+                  className="flex-1"
+                >
+                  이 패키지 선택
+                </Button>
+              )}
             </div>
           </div>
         </div>

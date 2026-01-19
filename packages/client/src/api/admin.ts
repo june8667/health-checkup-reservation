@@ -142,8 +142,8 @@ export async function getAdminPackageById(id: string) {
 export interface PackageInput {
   name: string;
   description: string;
-  category: 'basic' | 'standard' | 'premium' | 'specialized';
-  items: { name: string; description?: string }[];
+  category: 'basic' | 'standard' | 'premium' | 'specialized' | 'custom';
+  items: { itemId?: string; name: string; description?: string; price?: number }[];
   price: number;
   discountPrice?: number;
   duration: number;
@@ -222,20 +222,36 @@ export async function getScheduleReservations(params: {
 }
 
 // 데이터베이스 백업
-export async function downloadDatabaseBackup() {
+export type BackupType = 'config' | 'operations' | 'all';
+
+export async function downloadDatabaseBackup(type: BackupType = 'all') {
   const response = await apiClient.get('/admin/database/backup', {
+    params: { type },
     responseType: 'blob',
   });
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const filenameMap = {
+    config: `backup-config-${dateStr}.json`,
+    operations: `backup-operations-${dateStr}.json`,
+    all: `backup-all-${dateStr}.json`,
+  };
 
   const blob = new Blob([response.data], { type: 'application/json' });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `db-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = filenameMap[type];
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
+}
+
+// 데이터베이스 복원
+export async function restoreDatabaseBackup(backupData: any) {
+  const response = await apiClient.post('/admin/database/restore', { backupData });
+  return response.data;
 }
 
 // 샘플 데이터 생성
@@ -253,5 +269,47 @@ export async function generateFakeUsers(count: number = 1000) {
 // 테스트 데이터 삭제
 export async function clearTestData(target: 'users' | 'reservations' | 'payments' | 'all') {
   const response = await apiClient.post('/admin/database/clear', { target });
+  return response.data;
+}
+
+// 검진항목 관리 API
+export interface ExaminationItemInput {
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
+export interface ExaminationItem {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getExaminationItems(params?: { search?: string; isActive?: boolean }) {
+  const response = await apiClient.get('/admin/examination-items', { params });
+  return response.data;
+}
+
+export async function createExaminationItem(data: ExaminationItemInput) {
+  const response = await apiClient.post('/admin/examination-items', data);
+  return response.data;
+}
+
+export async function updateExaminationItem(id: string, data: Partial<ExaminationItemInput>) {
+  const response = await apiClient.put(`/admin/examination-items/${id}`, data);
+  return response.data;
+}
+
+export async function deleteExaminationItem(id: string) {
+  const response = await apiClient.delete(`/admin/examination-items/${id}`);
   return response.data;
 }

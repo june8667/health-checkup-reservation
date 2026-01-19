@@ -42,11 +42,13 @@ export default function SelectDate() {
 
   const handleNext = () => {
     if (selectedDate && selectedTime) {
+      window.scrollTo(0, 0);
       navigate('/reservation/patient-info');
     }
   };
 
   const handleBack = () => {
+    window.scrollTo(0, 0);
     navigate('/reservation/select-package');
   };
 

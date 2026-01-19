@@ -3,10 +3,12 @@ import { Schema, model, Document, Types } from 'mongoose';
 export interface IPackage extends Document {
   name: string;
   description: string;
-  category: 'basic' | 'standard' | 'premium' | 'specialized';
+  category: 'basic' | 'standard' | 'premium' | 'specialized' | 'custom';
   items: {
+    itemId?: Types.ObjectId;
     name: string;
     description?: string;
+    price?: number;
   }[];
   price: number;
   discountPrice?: number;
@@ -30,13 +32,15 @@ const packageSchema = new Schema<IPackage>(
     description: { type: String, required: true },
     category: {
       type: String,
-      enum: ['basic', 'standard', 'premium', 'specialized'],
+      enum: ['basic', 'standard', 'premium', 'specialized', 'custom'],
       required: true,
     },
     items: [
       {
+        itemId: { type: Schema.Types.ObjectId, ref: 'ExaminationItem' },
         name: { type: String, required: true },
         description: String,
+        price: Number,
       },
     ],
     price: { type: Number, required: true },

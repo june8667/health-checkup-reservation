@@ -1,30 +1,88 @@
-import { useState } from 'react';
-import { Download, Database, AlertCircle, Users, Calendar, Trash2, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Download, Upload, Database, AlertCircle, Users, Calendar, Trash2, Plus, Settings, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/common/Button';
 import {
   downloadDatabaseBackup,
+  restoreDatabaseBackup,
   generateSampleData,
   generateFakeUsers,
   clearTestData,
+  BackupType,
 } from '../../api/admin';
 
 export default function DatabaseAdmin() {
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingType, setDownloadingType] = useState<BackupType | null>(null);
+  const [restoringType, setRestoringType] = useState<BackupType | null>(null);
   const [isGeneratingSample, setIsGeneratingSample] = useState(false);
   const [isGeneratingUsers, setIsGeneratingUsers] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
   const [clearTarget, setClearTarget] = useState<'users' | 'reservations' | 'payments' | 'all'>('all');
 
-  const handleBackup = async () => {
-    setIsDownloading(true);
+  const configFileInputRef = useRef<HTMLInputElement>(null);
+  const operationsFileInputRef = useRef<HTMLInputElement>(null);
+  const allFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBackup = async (type: BackupType) => {
+    setDownloadingType(type);
     try {
-      await downloadDatabaseBackup();
-      toast.success('데이터베이스 백업이 완료되었습니다.');
+      await downloadDatabaseBackup(type);
+      const typeLabels = {
+        config: '설정 데이터',
+        operations: '운영 데이터',
+        all: '전체 데이터',
+      };
+      toast.success(`${typeLabels[type]} 백업이 완료되었습니다.`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '백업에 실패했습니다.');
     } finally {
-      setIsDownloading(false);
+      setDownloadingType(null);
+    }
+  };
+
+  const handleRestore = async (type: BackupType, file: File) => {
+    const typeLabels = {
+      config: '설정 데이터',
+      operations: '운영 데이터',
+      all: '전체 데이터',
+    };
+
+    if (!window.confirm(`${typeLabels[type]}를 복원하시겠습니까?\n\n기존 데이터가 모두 삭제되고 백업 데이터로 대체됩니다.\n이 작업은 되돌릴 수 없습니다.`)) {
+      return;
+    }
+
+    setRestoringType(type);
+    try {
+      const text = await file.text();
+      const backupData = JSON.parse(text);
+
+      // 백업 타입 검증
+      if (type !== 'all' && backupData.backupType && backupData.backupType !== type) {
+        toast.error(`백업 파일 타입이 일치하지 않습니다. (파일: ${backupData.backupType}, 선택: ${type})`);
+        return;
+      }
+
+      const result = await restoreDatabaseBackup(backupData);
+      toast.success(result.message);
+    } catch (error: any) {
+      if (error instanceof SyntaxError) {
+        toast.error('유효하지 않은 JSON 파일입니다.');
+      } else {
+        toast.error(error.response?.data?.message || '복원에 실패했습니다.');
+      }
+    } finally {
+      setRestoringType(null);
+      // 파일 입력 초기화
+      if (configFileInputRef.current) configFileInputRef.current.value = '';
+      if (operationsFileInputRef.current) operationsFileInputRef.current.value = '';
+      if (allFileInputRef.current) allFileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileSelect = (type: BackupType) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleRestore(type, file);
     }
   };
 
@@ -80,15 +138,64 @@ export default function DatabaseAdmin() {
       <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-8">DB 관리</h1>
 
       <div className="grid gap-6">
-        {/* 백업 카드 */}
+        {/* 설정 데이터 백업 카드 */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-blue-100 rounded-lg">
-              <Database className="w-6 h-6 text-blue-600" />
+              <Settings className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">데이터베이스 백업</h2>
-              <p className="text-sm text-gray-500">전체 데이터를 JSON 파일로 내보냅니다</p>
+              <h2 className="text-lg font-semibold text-gray-900">설정 데이터 백업</h2>
+              <p className="text-sm text-gray-500">병원, 패키지, 검진항목 정보를 백업합니다</p>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <h3 className="font-medium text-gray-900 mb-2">백업에 포함되는 데이터:</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>- 병원 정보 (hospitals)</li>
+              <li>- 패키지 정보 (packages)</li>
+              <li>- 검진항목 정보 (examinationItems)</li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => handleBackup('config')}
+              isLoading={downloadingType === 'config'}
+              className="w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              백업
+            </Button>
+            <input
+              ref={configFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect('config')}
+              className="hidden"
+            />
+            <Button
+              onClick={() => configFileInputRef.current?.click()}
+              isLoading={restoringType === 'config'}
+              variant="outline"
+              className="w-full sm:w-auto !border-blue-500 !text-blue-600 hover:!bg-blue-50"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              복원
+            </Button>
+          </div>
+        </div>
+
+        {/* 운영 데이터 백업 카드 */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <FileText className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">운영 데이터 백업</h2>
+              <p className="text-sm text-gray-500">회원, 예약, 결제 정보를 백업합니다</p>
             </div>
           </div>
 
@@ -98,8 +205,6 @@ export default function DatabaseAdmin() {
               <li>- 회원 정보 (users)</li>
               <li>- 예약 정보 (reservations)</li>
               <li>- 결제 정보 (payments)</li>
-              <li>- 패키지 정보 (packages)</li>
-              <li>- 병원 정보 (hospitals)</li>
               <li>- 차단 슬롯 (blockedSlots)</li>
             </ul>
           </div>
@@ -107,18 +212,76 @@ export default function DatabaseAdmin() {
           <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
             <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-yellow-800">
-              백업 파일에는 민감한 정보가 포함될 수 있습니다. 안전한 곳에 보관해주세요.
+              백업 파일에는 민감한 개인정보가 포함됩니다. 안전한 곳에 보관해주세요.
             </p>
           </div>
 
-          <Button
-            onClick={handleBackup}
-            isLoading={isDownloading}
-            className="w-full sm:w-auto"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            백업 파일 다운로드
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => handleBackup('operations')}
+              isLoading={downloadingType === 'operations'}
+              className="w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              백업
+            </Button>
+            <input
+              ref={operationsFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect('operations')}
+              className="hidden"
+            />
+            <Button
+              onClick={() => operationsFileInputRef.current?.click()}
+              isLoading={restoringType === 'operations'}
+              variant="outline"
+              className="w-full sm:w-auto !border-blue-500 !text-blue-600 hover:!bg-blue-50"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              복원
+            </Button>
+          </div>
+        </div>
+
+        {/* 전체 백업 카드 */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Database className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">전체 데이터 백업</h2>
+              <p className="text-sm text-gray-500">모든 데이터를 한 번에 백업합니다</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => handleBackup('all')}
+              isLoading={downloadingType === 'all'}
+              className="w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              백업
+            </Button>
+            <input
+              ref={allFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect('all')}
+              className="hidden"
+            />
+            <Button
+              onClick={() => allFileInputRef.current?.click()}
+              isLoading={restoringType === 'all'}
+              variant="outline"
+              className="w-full sm:w-auto !border-blue-500 !text-blue-600 hover:!bg-blue-50"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              복원
+            </Button>
+          </div>
         </div>
 
         {/* 샘플 데이터 생성 카드 */}

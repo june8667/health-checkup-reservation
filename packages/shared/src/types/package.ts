@@ -1,9 +1,11 @@
-export type PackageCategory = 'basic' | 'standard' | 'premium' | 'specialized';
+export type PackageCategory = 'basic' | 'standard' | 'premium' | 'specialized' | 'custom';
 export type TargetGender = 'male' | 'female' | 'all';
 
 export interface PackageItem {
   name: string;
   description?: string;
+  price?: number;
+  selectable?: boolean;
 }
 
 export interface Package {

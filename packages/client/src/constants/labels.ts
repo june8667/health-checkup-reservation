@@ -3,6 +3,7 @@ export const PACKAGE_CATEGORY_LABELS: Record<string, string> = {
   standard: '정밀 검진',
   premium: '프리미엄 검진',
   specialized: '특화 검진',
+  custom: '선택 건강검진',
 };
 
 export const GENDER_LABELS: Record<string, string> = {

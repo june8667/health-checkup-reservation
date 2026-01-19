@@ -87,10 +87,12 @@ export default function PatientInfo() {
 
   const onSubmit = (data: PatientForm) => {
     setPatientInfo(data);
+    window.scrollTo(0, 0);
     navigate('/reservation/confirm');
   };
 
   const handleBack = () => {
+    window.scrollTo(0, 0);
     navigate('/reservation/select-date');
   };
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Search, Filter, Plus, Edit, Trash2, X } from 'lucide-react';
+import { Search, Filter, Plus, Edit, Trash2, X, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   getAdminPackages,
@@ -10,8 +10,11 @@ import {
   updateAdminPackage,
   deleteAdminPackage,
   PackageInput,
+  getExaminationItems,
+  ExaminationItem,
 } from '../../api/admin';
 import Button from '../../components/common/Button';
+import ExaminationItems from './ExaminationItems';
 
 const CATEGORY_OPTIONS = [
   { value: '', label: '전체' },
@@ -19,6 +22,7 @@ const CATEGORY_OPTIONS = [
   { value: 'standard', label: '표준검진' },
   { value: 'premium', label: '프리미엄' },
   { value: 'specialized', label: '특화검진' },
+  { value: 'custom', label: '선택 건강검진' },
 ];
 
 const GENDER_OPTIONS = [
@@ -40,8 +44,8 @@ const DAY_OPTIONS = [
 interface PackageFormData {
   name: string;
   description: string;
-  category: 'basic' | 'standard' | 'premium' | 'specialized';
-  items: { name: string; description?: string }[];
+  category: 'basic' | 'standard' | 'premium' | 'specialized' | 'custom';
+  selectedItemIds: string[];
   price: string;
   discountPrice: string;
   duration: number;
@@ -59,7 +63,7 @@ const initialFormData: PackageFormData = {
   name: '',
   description: '',
   category: 'basic',
-  items: [{ name: '', description: '' }],
+  selectedItemIds: [],
   price: '',
   discountPrice: '',
   duration: 120,
@@ -74,6 +78,7 @@ const initialFormData: PackageFormData = {
 };
 
 export default function Packages() {
+  const [activeTab, setActiveTab] = useState<'packages' | 'items'>('packages');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -82,6 +87,13 @@ export default function Packages() {
   const [formData, setFormData] = useState<PackageFormData>(initialFormData);
 
   const queryClient = useQueryClient();
+
+  // 검진항목 목록 조회 (패키지 생성/수정 시 사용)
+  const { data: examinationItemsData } = useQuery({
+    queryKey: ['examinationItems'],
+    queryFn: () => getExaminationItems({ isActive: true }),
+  });
+  const allExaminationItems: ExaminationItem[] = examinationItemsData?.data || [];
 
   const { data, isLoading } = useQuery({
     queryKey: ['adminPackages', page, search, category],
@@ -137,11 +149,20 @@ export default function Packages() {
 
   const openEditModal = (pkg: any) => {
     setEditingPackage(pkg);
+    // 기존 패키지의 items에서 itemId 추출 또는 이름으로 매칭
+    const itemIds = pkg.items?.map((item: any) => {
+      // itemId가 있으면 사용
+      if (item.itemId) return item.itemId;
+      // 없으면 이름으로 매칭 시도 (기존 데이터 호환)
+      const found = allExaminationItems.find((ei) => ei.name === item.name);
+      return found?._id;
+    }).filter(Boolean) || [];
+
     setFormData({
       name: pkg.name,
       description: pkg.description,
       category: pkg.category,
-      items: pkg.items || [{ name: '', description: '' }],
+      selectedItemIds: itemIds,
       price: pkg.price?.toString() || '',
       discountPrice: pkg.discountPrice?.toString() || '',
       duration: pkg.duration,
@@ -166,15 +187,28 @@ export default function Packages() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const priceNum = parseInt(formData.price.replace(/,/g, '')) || 0;
+    // 선택된 검진항목들을 items 배열로 변환 (itemId 포함하여 저장)
+    const selectedItems = formData.selectedItemIds
+      .map((id) => allExaminationItems.find((item) => item._id === id))
+      .filter(Boolean)
+      .map((item) => ({
+        itemId: item!._id,
+        name: item!.name,
+        description: item!.description,
+        price: item!.price,
+      }));
+
+    // 검진항목 가격 합산
+    const itemsTotalPrice = selectedItems.reduce((sum, item) => sum + (item.price || 0), 0);
+
     const discountPriceNum = formData.discountPrice ? parseInt(formData.discountPrice.replace(/,/g, '')) : undefined;
 
     const submitData: Partial<PackageInput> = {
       name: formData.name,
       description: formData.description,
       category: formData.category,
-      items: formData.items.filter((item) => item.name.trim() !== ''),
-      price: priceNum,
+      items: selectedItems,
+      price: itemsTotalPrice,
       discountPrice: discountPriceNum,
       duration: formData.duration,
       targetGender: formData.targetGender,
@@ -200,24 +234,11 @@ export default function Packages() {
     }
   };
 
-  const addItem = () => {
-    setFormData({
-      ...formData,
-      items: [...formData.items, { name: '', description: '' }],
-    });
-  };
-
-  const removeItem = (index: number) => {
-    setFormData({
-      ...formData,
-      items: formData.items.filter((_, i) => i !== index),
-    });
-  };
-
-  const updateItem = (index: number, field: 'name' | 'description', value: string) => {
-    const newItems = [...formData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setFormData({ ...formData, items: newItems });
+  const toggleItemSelection = (itemId: string) => {
+    const newSelectedIds = formData.selectedItemIds.includes(itemId)
+      ? formData.selectedItemIds.filter((id) => id !== itemId)
+      : [...formData.selectedItemIds, itemId];
+    setFormData({ ...formData, selectedItemIds: newSelectedIds });
   };
 
   const toggleDay = (day: number) => {
@@ -227,22 +248,69 @@ export default function Packages() {
     setFormData({ ...formData, availableDays: newDays });
   };
 
+  // 선택된 검진항목 가격 합산
+  const getSelectedItemsTotalPrice = () => {
+    return formData.selectedItemIds.reduce((sum, id) => {
+      const item = allExaminationItems.find((ei) => ei._id === id);
+      return sum + (item?.price || 0);
+    }, 0);
+  };
+
   const packages = data?.data?.items || [];
   const totalPages = data?.data?.totalPages || 1;
 
+  // 패키지의 items 배열에서 가격 합산 계산
+  const getPackageItemsTotal = (pkg: any) => {
+    if (!pkg.items || pkg.items.length === 0) return 0;
+    return pkg.items.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
+  };
+
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">패키지 관리</h1>
-        <Button onClick={openCreateModal} className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          새 패키지 등록
-        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
-        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          onClick={() => setActiveTab('packages')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === 'packages'
+              ? 'border-primary-600 text-primary-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          패키지 관리
+        </button>
+        <button
+          onClick={() => setActiveTab('items')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+            activeTab === 'items'
+              ? 'border-primary-600 text-primary-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          검진항목 관리
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'items' ? (
+        <ExaminationItems />
+      ) : (
+        <>
+          {/* Package Management Content */}
+          <div className="flex justify-end mb-4">
+            <Button onClick={openCreateModal} className="w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" />
+              새 패키지 등록
+            </Button>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -327,14 +395,14 @@ export default function Packages() {
                   {pkg.discountPrice ? (
                     <div className="flex items-center gap-2">
                       <span className="line-through text-gray-400">
-                        {pkg.price.toLocaleString()}원
+                        {getPackageItemsTotal(pkg).toLocaleString()}원
                       </span>
                       <span className="text-red-600 font-bold">
                         {pkg.discountPrice.toLocaleString()}원
                       </span>
                     </div>
                   ) : (
-                    <span className="font-medium">{pkg.price.toLocaleString()}원</span>
+                    <span className="font-medium">{getPackageItemsTotal(pkg).toLocaleString()}원</span>
                   )}
                 </div>
                 <span className="text-gray-500">{pkg.duration}분</span>
@@ -402,7 +470,7 @@ export default function Packages() {
                       {pkg.discountPrice ? (
                         <div>
                           <span className="line-through text-gray-400">
-                            {pkg.price.toLocaleString()}원
+                            {getPackageItemsTotal(pkg).toLocaleString()}원
                           </span>
                           <br />
                           <span className="text-red-600 font-medium">
@@ -410,7 +478,7 @@ export default function Packages() {
                           </span>
                         </div>
                       ) : (
-                        <span>{pkg.price.toLocaleString()}원</span>
+                        <span>{getPackageItemsTotal(pkg).toLocaleString()}원</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -572,17 +640,15 @@ export default function Packages() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    가격 (원) *
+                    가격 (원)
+                    <span className="text-xs text-gray-500 ml-1">(검진항목 가격 합산)</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value.replace(/[^0-9]/g, '') })
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="예: 150000"
-                    required
+                    value={getSelectedItemsTotalPrice().toLocaleString()}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
+                    placeholder="검진항목 선택 시 자동 계산"
+                    disabled
                   />
                 </div>
 
@@ -637,47 +703,52 @@ export default function Packages() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  검진 항목
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  검진 항목 선택
+                  <span className="text-xs text-gray-500 ml-2">
+                    ({formData.selectedItemIds.length}개 선택됨)
+                  </span>
                 </label>
-                <div className="space-y-2">
-                  {formData.items.map((item, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => updateItem(index, 'name', e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="검진 항목명"
-                      />
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={item.description || ''}
-                          onChange={(e) => updateItem(index, 'description', e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          placeholder="설명 (선택)"
-                        />
-                        {formData.items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeItem(index)}
-                            className="text-red-500 hover:text-red-700 p-2"
+                {allExaminationItems.length === 0 ? (
+                  <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-lg text-center">
+                    등록된 검진항목이 없습니다. 먼저 검진항목 관리 탭에서 항목을 등록해주세요.
+                  </div>
+                ) : (
+                  <div className="border border-gray-300 rounded-lg max-h-60 overflow-y-auto">
+                    {allExaminationItems.map((item) => (
+                      <div
+                        key={item._id}
+                        onClick={() => toggleItemSelection(item._id)}
+                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${
+                          formData.selectedItemIds.includes(item._id) ? 'bg-primary-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-5 h-5 rounded border flex items-center justify-center ${
+                              formData.selectedItemIds.includes(item._id)
+                                ? 'bg-primary-600 border-primary-600'
+                                : 'border-gray-300'
+                            }`}
                           >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
+                            {formData.selectedItemIds.includes(item._id) && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                            {item.description && (
+                              <div className="text-xs text-gray-500">{item.description}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-sm font-medium text-gray-700">
+                          {item.price.toLocaleString()}원
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addItem}
-                    className="text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    + 항목 추가
-                  </button>
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -731,6 +802,8 @@ export default function Packages() {
           </div>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
@@ -741,6 +814,7 @@ function CategoryBadge({ category }: { category: string }) {
     standard: { label: '표준검진', className: 'bg-green-100 text-green-800' },
     premium: { label: '프리미엄', className: 'bg-purple-100 text-purple-800' },
     specialized: { label: '특화검진', className: 'bg-orange-100 text-orange-800' },
+    custom: { label: '선택 건강검진', className: 'bg-teal-100 text-teal-800' },
   };
 
   const config = categoryConfig[category] || {
