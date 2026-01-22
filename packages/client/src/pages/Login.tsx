@@ -50,7 +50,7 @@ export default function Login() {
       if (result.success && result.data) {
         setAuth(result.data.user, result.data.accessToken);
         toast.success(result.message || `${result.data.user.name}(으)로 로그인되었습니다.`);
-        navigate('/mypage');
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '로그인에 실패했습니다.');

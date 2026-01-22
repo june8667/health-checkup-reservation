@@ -40,13 +40,6 @@ export default function Header() {
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
-                  to="/packages"
-                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
-                >
-                  검진 패키지
-                </Link>
-                <span className="text-gray-300">|</span>
-                <Link
                   to="/mypage"
                   className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
                 >
@@ -73,13 +66,6 @@ export default function Header() {
               </>
             ) : (
               <>
-                <Link
-                  to="/packages"
-                  className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"
-                >
-                  검진 패키지
-                </Link>
-                <span className="text-gray-300">|</span>
                 <Link
                   to="/login"
                   className="text-[14px] sm:text-base md:text-lg text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap"

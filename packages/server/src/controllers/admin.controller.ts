@@ -568,9 +568,37 @@ export async function generateSampleData(
     // 검진항목 조회
     const allItems = await ExaminationItem.find({ isActive: true });
 
-    // 2. 샘플 패키지 생성 (없는 경우)
+    // 2. 국가건강검진 1차 패키지 확인 및 생성
+    const nationalPackageExists = await Package.findOne({ name: '국가건강검진 1차' });
+    if (!nationalPackageExists && allItems.length > 0) {
+      const selectItemsForNational = (names: string[]) => {
+        return allItems
+          .filter(item => names.includes(item.name))
+          .map(item => ({ name: item.name, description: item.description, price: item.price }));
+      };
+      const nationalHealthItems = selectItemsForNational(['신체계측', '시력/청력검사', '혈액검사(일반)', '혈액검사(간기능)', '혈액검사(당뇨)', '혈액검사(지질)', '소변검사', '흉부 X-ray']);
+
+      await Package.create({
+        name: '국가건강검진 1차',
+        description: '국민건강보험공단에서 제공하는 기본 건강검진 프로그램입니다. 만 20세 이상 건강보험 가입자라면 2년마다 무료로 받을 수 있습니다.',
+        category: 'basic',
+        items: nationalHealthItems,
+        price: 0,
+        discountPrice: 0,
+        duration: 30,
+        targetGender: 'all',
+        availableDays: [1, 2, 3, 4, 5],
+        maxReservationsPerSlot: 30,
+        isActive: true,
+        displayOrder: 0,
+        tags: ['국가검진', '무료', '추천'],
+      });
+      createdPackagesCount++;
+    }
+
+    // 3. 기타 샘플 패키지 생성 (없는 경우)
     const existingPackages = await Package.countDocuments();
-    if (existingPackages === 0 && allItems.length > 0) {
+    if (existingPackages <= 1 && allItems.length > 0) {
       // 항목 선택 헬퍼 함수
       const selectItems = (names: string[]) => {
         return allItems

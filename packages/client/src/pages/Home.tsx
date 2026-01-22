@@ -1,8 +1,46 @@
-import { Link } from 'react-router-dom';
-import { Calendar, Shield, Clock, Award } from 'lucide-react';
-import Button from '../components/common/Button';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Shield, Clock, Award, Check, Stethoscope, HeartPulse, Eye, Droplets, Activity } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getPackages } from '../api/packages';
+import { useReservationStore } from '../store/reservationStore';
+import { useAuthStore } from '../store/authStore';
+import type { Package } from '@health-checkup/shared';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { setSelectedPackage } = useReservationStore();
+  const { isAuthenticated } = useAuthStore();
+
+  // 패키지 목록 조회하여 '국가건강검진 1차' 찾기
+  const { data: packagesData, isLoading: isLoadingPackage } = useQuery({
+    queryKey: ['packages', 'default'],
+    queryFn: () => getPackages({ limit: 50 }),
+  });
+
+  // '국가건강검진 1차' 또는 첫 번째 패키지 사용
+  const defaultPackage = packagesData?.data?.items?.find(
+    (pkg: Package) => pkg.name === '국가건강검진 1차'
+  ) || packagesData?.data?.items?.[0];
+
+  // 패키지 정보 (로딩 중이거나 없을 때 기본값)
+  const packageInfo = defaultPackage || {
+    name: '국가건강검진 1차',
+    description: '국민건강보험공단에서 제공하는 기본 건강검진 프로그램입니다.',
+    duration: 30,
+    price: 0,
+    discountPrice: 0,
+  };
+
+  const handleReservation = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/reservation/select-date' } } });
+      return;
+    }
+    if (defaultPackage) {
+      setSelectedPackage(defaultPackage);
+    }
+    navigate('/reservation/select-date');
+  };
   const features = [
     {
       icon: Calendar,
@@ -47,17 +85,86 @@ export default function Home() {
               전문 의료진과 최신 장비로 정확한 건강검진을 제공합니다.
               온라인으로 간편하게 예약하고 관리하세요.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/packages">
-                <button className="w-48 px-8 py-4 text-lg font-bold tracking-wide text-primary-700 bg-gradient-to-b from-white to-gray-100 rounded-xl shadow-[0_4px_0_0_rgba(0,0,0,0.2),0_6px_12px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)] border border-white/50 hover:shadow-[0_2px_0_0_rgba(0,0,0,0.2),0_3px_6px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.8)] hover:translate-y-[2px] active:shadow-none active:translate-y-1 transition-all duration-150 drop-shadow-sm">
-                  검진 패키지 보기
-                </button>
-              </Link>
-              <Link to="/reservation">
-                <button className="w-48 px-8 py-4 text-lg font-bold tracking-wide text-white bg-gradient-to-b from-primary-500 to-primary-700 rounded-xl shadow-[0_4px_0_0_rgba(0,80,120,0.5),0_6px_12px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)] border border-primary-400/50 hover:shadow-[0_2px_0_0_rgba(0,80,120,0.5),0_3px_6px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.2)] hover:translate-y-[2px] active:shadow-none active:translate-y-1 transition-all duration-150 [text-shadow:_0_1px_2px_rgba(0,0,0,0.3)]">
-                  지금 예약하기
-                </button>
-              </Link>
+            <div className="flex justify-center">
+              {/* 국가건강검진 1차 카드 */}
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
+                {/* 카드 헤더 */}
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <Stethoscope className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{packageInfo.name}</h3>
+                        <p className="text-primary-100 text-sm">국민건강보험공단 지원</p>
+                      </div>
+                    </div>
+                    <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                      무료
+                    </div>
+                  </div>
+                </div>
+
+                {/* 카드 바디 */}
+                <div className="p-6">
+                  <p className="text-gray-600 text-sm mb-4">{packageInfo.description}</p>
+
+                  {/* 검진 항목 */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-primary-600" />
+                      주요 검진 항목
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(defaultPackage?.items || [
+                        { name: '신체계측' },
+                        { name: '시력/청력검사' },
+                        { name: '혈액검사' },
+                        { name: '소변검사' },
+                        { name: '흉부 X-ray' },
+                        { name: '구강검진' },
+                      ]).slice(0, 6).map((item: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"
+                        >
+                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {defaultPackage?.items && defaultPackage.items.length > 6 && (
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        외 {defaultPackage.items.length - 6}개 항목 포함
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 하단 정보 */}
+                  <div className="flex items-center justify-between py-4 border-t border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">약 {packageInfo.duration}분</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">평일 가능</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 예약하기 버튼 */}
+                  <button
+                    onClick={handleReservation}
+                    disabled={isLoadingPackage}
+                    className="w-full py-4 text-lg font-bold text-white bg-gradient-to-b from-primary-400 via-primary-500 to-primary-600 rounded-xl border-b-4 border-primary-700 hover:border-b-2 hover:mt-[2px] hover:mb-[-2px] active:border-b-0 active:mt-1 active:mb-[-4px] transition-all duration-75 disabled:opacity-50"
+                  >
+                    {isLoadingPackage ? '로딩중...' : '지금 예약하기'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -92,26 +199,6 @@ export default function Home() {
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-primary-600 rounded-2xl p-8 md:p-12 text-center text-white">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              건강검진, 더 이상 미루지 마세요
-            </h2>
-            <p className="text-primary-100 mb-6 max-w-xl mx-auto">
-              정기적인 건강검진은 질병의 조기 발견과 예방에 필수적입니다.
-              지금 바로 예약하세요.
-            </p>
-            <Link to="/packages">
-              <Button size="lg" variant="secondary">
-                패키지 확인하기
-              </Button>
-            </Link>
           </div>
         </div>
       </section>

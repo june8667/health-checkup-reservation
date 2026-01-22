@@ -4,23 +4,36 @@ import { useQuery } from '@tanstack/react-query';
 import Calendar from 'react-calendar';
 import { format, addDays, isBefore, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { getAvailableSlots } from '../../api/packages';
+import { getAvailableSlots, getPackages } from '../../api/packages';
 import { useReservationStore } from '../../store/reservationStore';
 import Button from '../../components/common/Button';
+import type { Package } from '@health-checkup/shared';
 import 'react-calendar/dist/Calendar.css';
 
 export default function SelectDate() {
   const navigate = useNavigate();
-  const { selectedPackage, selectedDate, selectedTime, setSelectedDate, setSelectedTime } =
+  const { selectedPackage, selectedDate, selectedTime, setSelectedDate, setSelectedTime, setSelectedPackage } =
     useReservationStore();
 
   const [calendarDate, setCalendarDate] = useState<Date>(selectedDate || new Date());
 
+  // 패키지가 없으면 기본 패키지 로드
+  const { data: packagesData } = useQuery({
+    queryKey: ['packages', 'default'],
+    queryFn: () => getPackages({ limit: 50 }),
+    enabled: !selectedPackage,
+  });
+
   useEffect(() => {
-    if (!selectedPackage) {
-      navigate('/reservation/select-package');
+    if (!selectedPackage && packagesData?.data?.items) {
+      const defaultPkg = packagesData.data.items.find(
+        (pkg: Package) => pkg.name === '국가건강검진 1차'
+      );
+      if (defaultPkg) {
+        setSelectedPackage(defaultPkg);
+      }
     }
-  }, [selectedPackage, navigate]);
+  }, [selectedPackage, packagesData, setSelectedPackage]);
 
   const { data: slotsData, isLoading: slotsLoading } = useQuery({
     queryKey: ['available-slots', selectedPackage?._id, selectedDate?.toISOString()],
@@ -49,7 +62,7 @@ export default function SelectDate() {
 
   const handleBack = () => {
     window.scrollTo(0, 0);
-    navigate('/reservation/select-package');
+    navigate('/');
   };
 
   const minDate = addDays(new Date(), 1);
@@ -60,7 +73,11 @@ export default function SelectDate() {
   };
 
   if (!selectedPackage) {
-    return null;
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">패키지 정보를 불러오는 중...</p>
+      </div>
+    );
   }
 
   return (

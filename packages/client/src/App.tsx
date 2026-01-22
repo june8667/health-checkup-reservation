@@ -7,7 +7,6 @@ import Register from './pages/Register';
 import Packages from './pages/Packages';
 import PackageDetail from './pages/PackageDetail';
 import ReservationLayout from './pages/Reservation/ReservationLayout';
-import SelectPackage from './pages/Reservation/SelectPackage';
 import SelectDate from './pages/Reservation/SelectDate';
 import PatientInfo from './pages/Reservation/PatientInfo';
 import ReservationConfirm from './pages/Reservation/ReservationConfirm';
@@ -43,8 +42,7 @@ function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="reservation" element={<ReservationLayout />}>
-            <Route index element={<SelectPackage />} />
-            <Route path="select-package" element={<SelectPackage />} />
+            <Route index element={<SelectDate />} />
             <Route path="select-date" element={<SelectDate />} />
             <Route path="patient-info" element={<PatientInfo />} />
             <Route path="confirm" element={<ReservationConfirm />} />
