@@ -89,7 +89,7 @@ export default function Home() {
               {/* 국가건강검진 1차 카드 */}
               <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
                 {/* 카드 헤더 */}
-                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
