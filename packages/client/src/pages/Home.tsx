@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Shield, Clock, Award, Check, Stethoscope, HeartPulse, Eye, Droplets, Activity } from 'lucide-react';
+import { Calendar, Shield, Clock, Award, Check, Stethoscope, Activity } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getPackages } from '../api/packages';
 import { useReservationStore } from '../store/reservationStore';
