@@ -29,7 +29,7 @@ export default function Header() {
           </div>
 
           {/* Navigation - 로고 아래에 표시 */}
-          <div className="flex items-center justify-center md:justify-end flex-wrap gap-x-2 gap-y-1 mt-2 md:mt-0">
+          <div className="flex items-center justify-center md:justify-end flex-wrap gap-x-2 gap-y-1 mt-0 md:mt-0">
             {isAuthenticated ? (
               <>
                 <Link
