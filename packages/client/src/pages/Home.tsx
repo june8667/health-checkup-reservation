@@ -75,13 +75,13 @@ export default function Home() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary-700/80 to-primary-900/70"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[50px] pb-20 md:py-28">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
               건강한 삶의 시작,<br />
               지금 검진을 예약하세요
             </h1>
-            <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
               전문 의료진과 최신 장비로 정확한 건강검진을 제공합니다.
               온라인으로 간편하게 예약하고 관리하세요.
             </p>

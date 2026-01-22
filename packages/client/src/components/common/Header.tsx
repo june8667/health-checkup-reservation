@@ -22,7 +22,7 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex flex-col md:flex-row md:justify-between md:h-[74px] md:items-center py-2 md:py-0">
           {/* 로고 */}
-          <div className="flex justify-center md:justify-start h-[58px] md:h-auto overflow-visible">
+          <div className="flex justify-center md:justify-start h-[48px] md:h-auto overflow-visible">
             <Link to="/" className="flex items-center">
               <img src="/headerlogo.png" alt="건강검진예약" className="h-[77px] md:h-28 w-auto" />
             </Link>
