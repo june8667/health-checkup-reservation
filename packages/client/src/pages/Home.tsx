@@ -75,48 +75,48 @@ export default function Home() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary-700/80 to-primary-900/70"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[25px] pb-20 md:py-28">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[5px] pb-20 md:pt-8 md:pb-28">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
               건강한 삶의 시작,<br />
               지금 검진을 예약하세요
             </h1>
-            <p className="text-base text-primary-100 mb-4 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg lg:text-xl text-primary-100 mb-6 md:mb-8 max-w-2xl mx-auto">
               전문 의료진과 최신 장비로 정확한 건강검진을 제공합니다.
               온라인으로 간편하게 예약하고 관리하세요.
             </p>
             <div className="flex justify-center">
               {/* 국가건강검진 1차 카드 */}
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md md:max-w-lg lg:max-w-xl w-full overflow-hidden border border-gray-100">
                 {/* 카드 헤더 */}
-                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-3">
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 md:py-5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <Stethoscope className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-white">{packageInfo.name}</h3>
-                        <p className="text-primary-100 text-sm">국민건강보험공단 지원</p>
+                        <h3 className="text-xl md:text-2xl font-bold text-white">{packageInfo.name}</h3>
+                        <p className="text-primary-100 text-sm md:text-base">국민건강보험공단 지원</p>
                       </div>
                     </div>
-                    <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                    <div className="bg-yellow-400 text-yellow-900 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-sm md:text-base font-bold shadow-lg">
                       무료
                     </div>
                   </div>
                 </div>
 
                 {/* 카드 바디 */}
-                <div className="p-6">
-                  <p className="text-gray-600 text-sm mb-4">{packageInfo.description}</p>
+                <div className="p-6 md:p-8">
+                  <p className="text-gray-600 text-sm md:text-base mb-5">{packageInfo.description}</p>
 
                   {/* 검진 항목 */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-primary-600" />
+                  <div className="mb-5">
+                    <h4 className="text-sm md:text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
                       주요 검진 항목
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 md:gap-3">
                       {(defaultPackage?.items || [
                         { name: '신체계측' },
                         { name: '시력/청력검사' },
@@ -127,15 +127,15 @@ export default function Home() {
                       ]).slice(0, 6).map((item: any, index: number) => (
                         <div
                           key={index}
-                          className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"
+                          className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 md:px-4 md:py-3"
                         >
-                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                          <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500 flex-shrink-0" />
+                          <span className="text-sm md:text-base text-gray-700 truncate">{item.name}</span>
                         </div>
                       ))}
                     </div>
                     {defaultPackage?.items && defaultPackage.items.length > 6 && (
-                      <p className="text-xs text-gray-500 mt-2 text-center">
+                      <p className="text-xs md:text-sm text-gray-500 mt-2 text-center">
                         외 {defaultPackage.items.length - 6}개 항목 포함
                       </p>
                     )}
@@ -143,14 +143,14 @@ export default function Home() {
 
                   {/* 하단 정보 */}
                   <div className="flex items-center justify-between py-4 border-t border-gray-100">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">약 {packageInfo.duration}분</span>
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <div className="flex items-center gap-1.5 text-gray-500">
+                        <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-sm md:text-base">약 {packageInfo.duration}분</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm">평일 가능</span>
+                      <div className="flex items-center gap-1.5 text-gray-500">
+                        <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-sm md:text-base">평일 가능</span>
                       </div>
                     </div>
                   </div>
@@ -159,7 +159,7 @@ export default function Home() {
                   <button
                     onClick={handleReservation}
                     disabled={isLoadingPackage}
-                    className="w-full py-4 text-lg font-bold text-white bg-gradient-to-b from-primary-400 via-primary-500 to-primary-600 rounded-xl border-b-4 border-primary-700 hover:border-b-2 hover:mt-[2px] hover:mb-[-2px] active:border-b-0 active:mt-1 active:mb-[-4px] transition-all duration-75 disabled:opacity-50"
+                    className="w-full py-4 md:py-5 text-lg md:text-xl font-bold text-white bg-gradient-to-b from-primary-400 via-primary-500 to-primary-600 rounded-xl border-b-4 border-primary-700 hover:border-b-2 hover:mt-[2px] hover:mb-[-2px] active:border-b-0 active:mt-1 active:mb-[-4px] transition-all duration-75 disabled:opacity-50"
                   >
                     {isLoadingPackage ? '로딩중...' : '지금 예약하기'}
                   </button>
