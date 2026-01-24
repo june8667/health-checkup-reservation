@@ -173,6 +173,11 @@ export async function deleteAdminPackage(id: string) {
   return response.data;
 }
 
+export async function reorderPackages(items: { id: string; displayOrder: number }[]) {
+  const response = await apiClient.post('/admin/packages/reorder', { items });
+  return response.data;
+}
+
 // 차단된 시간 관리 API
 export async function getBlockedSlots(params: {
   startDate: string;
@@ -311,5 +316,10 @@ export async function updateExaminationItem(id: string, data: Partial<Examinatio
 
 export async function deleteExaminationItem(id: string) {
   const response = await apiClient.delete(`/admin/examination-items/${id}`);
+  return response.data;
+}
+
+export async function reorderExaminationItems(items: { id: string; displayOrder: number }[]) {
+  const response = await apiClient.post('/admin/examination-items/reorder', { items });
   return response.data;
 }

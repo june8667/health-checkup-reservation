@@ -15,6 +15,7 @@ import {
   createPackage,
   updatePackage,
   deletePackage,
+  reorderPackages,
   getBlockedSlots,
   createBlockedSlot,
   deleteBlockedSlot,
@@ -28,6 +29,7 @@ import {
   createExaminationItem,
   updateExaminationItem,
   deleteExaminationItem,
+  reorderExaminationItems,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -59,12 +61,14 @@ router.get('/packages/:id', getPackageById);
 router.post('/packages', createPackage);
 router.put('/packages/:id', updatePackage);
 router.delete('/packages/:id', deletePackage);
+router.post('/packages/reorder', reorderPackages);
 
 // Examination items management (검진항목 관리)
 router.get('/examination-items', getAllExaminationItems);
 router.post('/examination-items', createExaminationItem);
 router.put('/examination-items/:id', updateExaminationItem);
 router.delete('/examination-items/:id', deleteExaminationItem);
+router.post('/examination-items/reorder', reorderExaminationItems);
 
 // Blocked slots management (시간 차단 관리)
 router.get('/blocked-slots', getBlockedSlots);

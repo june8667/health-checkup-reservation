@@ -387,6 +387,40 @@ export async function deletePackage(
   }
 }
 
+export async function reorderPackages(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      res.status(400).json({
+        success: false,
+        message: '잘못된 요청 형식입니다.',
+      });
+      return;
+    }
+
+    const bulkOps = items.map((item: { id: string; displayOrder: number }) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { displayOrder: item.displayOrder } },
+      },
+    }));
+
+    await Package.bulkWrite(bulkOps);
+
+    res.json({
+      success: true,
+      message: '순서가 변경되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 차단된 시간 관리
 export async function getBlockedSlots(
   req: AuthRequest,
@@ -1212,6 +1246,40 @@ export async function deleteExaminationItem(
     res.json({
       success: true,
       message: '검진항목이 삭제되었습니다.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function reorderExaminationItems(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      res.status(400).json({
+        success: false,
+        message: '잘못된 요청 형식입니다.',
+      });
+      return;
+    }
+
+    const bulkOps = items.map((item: { id: string; displayOrder: number }) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { displayOrder: item.displayOrder } },
+      },
+    }));
+
+    await ExaminationItem.bulkWrite(bulkOps);
+
+    res.json({
+      success: true,
+      message: '순서가 변경되었습니다.',
     });
   } catch (error) {
     next(error);
