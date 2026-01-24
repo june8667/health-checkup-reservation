@@ -630,6 +630,34 @@ export async function generateSampleData(
       createdPackagesCount++;
     }
 
+    // 국가5대암검진 패키지 확인 및 생성
+    const cancerScreeningExists = await Package.findOne({ name: '국가5대암검진' });
+    if (!cancerScreeningExists && allItems.length > 0) {
+      const selectItemsForCancer = (names: string[]) => {
+        return allItems
+          .filter(item => names.includes(item.name))
+          .map(item => ({ name: item.name, description: item.description, price: item.price }));
+      };
+      const cancerScreeningItems = selectItemsForCancer(['위내시경', '대장내시경', '복부 초음파', '유방 초음파', '유방 X-ray', '자궁경부암검사']);
+
+      await Package.create({
+        name: '국가5대암검진',
+        description: '국민건강보험공단에서 지원하는 5대암(위암, 대장암, 간암, 유방암, 자궁경부암) 검진 프로그램입니다. 연령 및 성별에 따라 무료로 받을 수 있습니다.',
+        category: 'basic',
+        items: cancerScreeningItems,
+        price: 0,
+        discountPrice: 0,
+        duration: 120,
+        targetGender: 'all',
+        availableDays: [1, 2, 3, 4, 5],
+        maxReservationsPerSlot: 15,
+        isActive: true,
+        displayOrder: 1,
+        tags: ['국가검진', '무료', '암검진'],
+      });
+      createdPackagesCount++;
+    }
+
     // 3. 기타 샘플 패키지 생성 (없는 경우)
     const existingPackages = await Package.countDocuments();
     if (existingPackages <= 1 && allItems.length > 0) {
